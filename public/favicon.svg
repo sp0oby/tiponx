@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Base token shape - made of pixels -->
+  <rect x="8" y="4" width="4" height="4" fill="#FFD700"/>
+  <rect x="12" y="4" width="8" height="4" fill="#FFD700"/>
+  <rect x="20" y="4" width="4" height="4" fill="#FFD700"/>
+  
+  <rect x="4" y="8" width="4" height="16" fill="#FFD700"/>
+  <rect x="24" y="8" width="4" height="16" fill="#FFD700"/>
+  
+  <rect x="8" y="24" width="4" height="4" fill="#FFD700"/>
+  <rect x="12" y="24" width="8" height="4" fill="#FFD700"/>
+  <rect x="20" y="24" width="4" height="4" fill="#FFD700"/>
+  
+  <!-- Inner shadow pixels -->
+  <rect x="8" y="8" width="16" height="16" fill="#FFA500"/>
+  
+  <!-- X symbol in pixels -->
+  <rect x="12" y="12" width="4" height="4" fill="#000000"/>
+  <rect x="16" y="16" width="4" height="4" fill="#000000"/>
+  <rect x="12" y="20" width="4" height="4" fill="#000000"/>
+  <rect x="20" y="12" width="4" height="4" fill="#000000"/>
+  
+  <!-- Shine pixels -->
+  <rect x="8" y="8" width="4" height="4" fill="#FFF5CC"/>
+  <rect x="12" y="8" width="4" height="4" fill="#FFF5CC" fill-opacity="0.5"/>
+</svg> 

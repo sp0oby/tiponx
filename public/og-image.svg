@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#000000"/>
+  <rect x="40" y="40" width="1120" height="550" fill="#1A1A1A" stroke="#333333" stroke-width="2"/>
+  
+  <!-- Logo -->
+  <g transform="translate(100, 165) scale(3)">
+    <!-- Base token shape - made of pixels -->
+    <rect x="16" y="8" width="8" height="8" fill="#FFD700"/>
+    <rect x="24" y="8" width="16" height="8" fill="#FFD700"/>
+    <rect x="40" y="8" width="8" height="8" fill="#FFD700"/>
+    
+    <rect x="8" y="16" width="8" height="32" fill="#FFD700"/>
+    <rect x="48" y="16" width="8" height="32" fill="#FFD700"/>
+    
+    <rect x="16" y="48" width="8" height="8" fill="#FFD700"/>
+    <rect x="24" y="48" width="16" height="8" fill="#FFD700"/>
+    <rect x="40" y="48" width="8" height="8" fill="#FFD700"/>
+    
+    <!-- Inner shadow pixels -->
+    <rect x="16" y="16" width="32" height="32" fill="#FFA500"/>
+    
+    <!-- X symbol in pixels -->
+    <rect x="24" y="24" width="8" height="8" fill="#000000"/>
+    <rect x="32" y="32" width="8" height="8" fill="#000000"/>
+    <rect x="24" y="40" width="8" height="8" fill="#000000"/>
+    <rect x="40" y="24" width="8" height="8" fill="#000000"/>
+    
+    <!-- Shine pixels -->
+    <rect x="16" y="16" width="8" height="8" fill="#FFF5CC"/>
+    <rect x="24" y="16" width="8" height="8" fill="#FFF5CC" fill-opacity="0.5"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="400" y="250" fill="#FFFFFF" font-family="'Press Start 2P', monospace" font-size="64" font-weight="bold">TipOnX</text>
+  <text x="400" y="350" fill="#888888" font-family="Inter, sans-serif" font-size="32">Web3 Tipping for X Creators</text>
+  
+  <!-- Feature Points -->
+  <g transform="translate(400, 400)" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="24">
+    <text y="0">✦ Instant Crypto Tips</text>
+    <text y="40">✦ Secure Web3 Transactions</text>
+    <text y="80">✦ Support Your Favorite Creators</text>
+  </g>
+</svg> 
