@@ -112,7 +112,7 @@ let exchangeRatesCache: {
 }
 
 // Get current USD prices for tokens
-async function getExchangeRates(): Promise<ExchangeRates> {
+export async function getExchangeRates(): Promise<ExchangeRates> {
   try {
     // Use cached rates if they're less than 1 minute old
     const now = Date.now()
@@ -617,7 +617,6 @@ const blockchain = {
 export default blockchain
 
 export {
-  getExchangeRates,
   getGasEstimate,
   sendTip,
   connectEthereumWallet,
