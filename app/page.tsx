@@ -81,88 +81,78 @@ export default function Home() {
   }
 
   // Fetch user's transactions
-  useEffect(() => {
-    const fetchUserTransactions = async () => {
-      if (!session?.user?.handle) return;
-      
-      try {
-        // Fetch both sent and received transactions
-        const [sentResponse, receivedResponse] = await Promise.all([
-          fetch(`/api/transactions?sender=${encodeURIComponent(session.user.handle)}`),
-          fetch(`/api/transactions?receiver=${encodeURIComponent(session.user.handle)}`)
-        ]);
-        
-        if (sentResponse.ok && receivedResponse.ok) {
-          const [sentData, receivedData] = await Promise.all([
-            sentResponse.json(),
-            receivedResponse.json()
-          ]);
-          
-          console.log('Fetched user sent transactions:', sentData);
-          console.log('Fetched user received transactions:', receivedData);
-          
-          // Get unique handles for all users involved in transactions
-          const uniqueHandles = new Set([
-            ...sentData.map((tx: any) => tx.senderHandle),
-            ...sentData.map((tx: any) => tx.receiverHandle),
-            ...receivedData.map((tx: any) => tx.senderHandle),
-            ...receivedData.map((tx: any) => tx.receiverHandle)
-          ]);
-          
-          // Fetch user data for all handles in parallel
-          const userDataPromises = Array.from(uniqueHandles).map(async handle => {
-            try {
-              const response = await fetch(`/api/users?handle=${encodeURIComponent(handle)}`);
-              if (response.ok) {
-                const userData = await response.json();
-                return [handle, userData];
-              }
-              console.log(`User ${handle} not found, might be deleted`);
-              return [handle, null];
-            } catch (error) {
-              console.error(`Error fetching user data for ${handle}:`, error);
-              return [handle, null];
-            }
-          });
-          
-          // Wait for all user data to be fetched
-          const userDataResults = await Promise.all(userDataPromises);
-          const userDataMap = Object.fromEntries(userDataResults);
-          
-          // Filter transactions where both users exist
-          const validSentTransactions = sentData.filter((tx: any) => 
-            userDataMap[tx.senderHandle] && userDataMap[tx.receiverHandle]
-          );
-          
-          const validReceivedTransactions = receivedData.filter((tx: any) => 
-            userDataMap[tx.senderHandle] && userDataMap[tx.receiverHandle]
-          );
-          
-          setUserTipsSent(validSentTransactions);
-          setUserTipsReceived(validReceivedTransactions);
-          
-          // Calculate total USD values - only count confirmed transactions
-          const totalSent = validSentTransactions
-            .filter(tx => tx.status === 'confirmed')
-            .reduce((sum: number, tx: any) => sum + (tx.usdValue || 0), 0);
-            
-          const totalReceived = validReceivedTransactions
-            .filter(tx => tx.status === 'confirmed')
-            .reduce((sum: number, tx: any) => sum + (tx.usdValue || 0), 0);
-            
-          setTotalTipsSentUsd(totalSent);
-          setTotalTipsReceivedUsd(totalReceived);
-        } else {
-          console.error('Error fetching user transactions:', 
-            !sentResponse.ok ? await sentResponse.text() : await receivedResponse.text()
-          );
-        }
-      } catch (error) {
-        console.error('Error fetching user transactions:', error);
-      }
-    };
+  const fetchUserTransactions = async () => {
+    if (!session?.user?.handle) return;
     
+    try {
+      // Fetch both sent and received transactions
+      const [sentResponse, receivedResponse] = await Promise.all([
+        fetch(`/api/transactions?sender=${encodeURIComponent(session.user.handle)}`, {
+          cache: 'no-store' // Prevent caching
+        }),
+        fetch(`/api/transactions?receiver=${encodeURIComponent(session.user.handle)}`, {
+          cache: 'no-store' // Prevent caching
+        })
+      ]);
+
+      if (sentResponse.ok && receivedResponse.ok) {
+        const [sentData, receivedData] = await Promise.all([
+          sentResponse.json(),
+          receivedResponse.json()
+        ]);
+
+        // Don't filter transactions, use them all
+        const validSentTransactions = sentData;
+        const validReceivedTransactions = receivedData;
+
+        console.log('Valid sent transactions:', validSentTransactions);
+        
+        setUserTipsSent(validSentTransactions);
+        setUserTipsReceived(validReceivedTransactions);
+        
+        // Calculate total USD values - count all transactions
+        const totalSent = validSentTransactions
+          .reduce((sum: number, tx: any) => {
+            const value = tx.usdValue || 0;
+            console.log(`Adding transaction to total: ${tx.amount} ${tx.currency} = $${value}`);
+            return sum + value;
+          }, 0);
+          
+        console.log('Final total sent:', totalSent);
+        
+        const totalReceived = validReceivedTransactions
+          .reduce((sum: number, tx: any) => {
+            const value = tx.usdValue || 0;
+            console.log(`Adding received transaction to total: ${tx.amount} ${tx.currency} = $${value}`);
+            return sum + value;
+          }, 0);
+          
+        console.log('Final total received:', totalReceived);
+          
+        setTotalTipsSentUsd(totalSent);
+        setTotalTipsReceivedUsd(totalReceived);
+      } else {
+        console.error('Error fetching user transactions:', 
+          !sentResponse.ok ? await sentResponse.text() : await receivedResponse.text()
+        );
+      }
+    } catch (error) {
+      console.error('Error fetching user transactions:', error);
+    }
+  };
+
+  // Fetch transactions whenever session changes
+  useEffect(() => {
     fetchUserTransactions();
+  }, [session?.user?.handle]);
+
+  // Refresh transactions periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchUserTransactions();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, [session?.user?.handle]);
 
   // Function to fetch creators
