@@ -49,8 +49,14 @@ export async function GET(request) {
         const user = await db.collection('users').findOne({ handle });
         if (user) {
           userDataMap.set(handle, {
+            id: user._id,
             avatar: user.avatar,
-            name: user.name
+            name: user.name,
+            handle: user.handle,
+            description: user.description,
+            isClaimed: user.isClaimed,
+            isTwitterVerified: user.isTwitterVerified,
+            wallets: user.wallets || {}
           });
         }
       } catch (error) {
@@ -59,13 +65,20 @@ export async function GET(request) {
     }));
 
     // Enrich transactions with user data
-    const enrichedTransactions = validTransactions.map(tx => ({
-      ...tx,
-      senderAvatar: userDataMap.get(tx.senderHandle)?.avatar,
-      recipientAvatar: userDataMap.get(tx.receiverHandle)?.avatar,
-      senderName: userDataMap.get(tx.senderHandle)?.name,
-      recipientName: userDataMap.get(tx.receiverHandle)?.name
-    }));
+    const enrichedTransactions = validTransactions.map(tx => {
+      const senderData = userDataMap.get(tx.senderHandle);
+      const recipientData = userDataMap.get(tx.receiverHandle);
+      
+      return {
+        ...tx,
+        senderAvatar: senderData?.avatar,
+        recipientAvatar: recipientData?.avatar,
+        senderName: senderData?.name,
+        recipientName: recipientData?.name,
+        sender: senderData,
+        recipient: recipientData
+      };
+    });
     
     return NextResponse.json(enrichedTransactions);
   } catch (error) {
@@ -109,18 +122,18 @@ export async function POST(request) {
     console.log('Exchange rates:', rates);
     
     // Calculate USD value using real exchange rates
-    if (!transactionData.usdValue) {
-      const rate = rates[transactionData.currency] || 0;
-      console.log(`Using rate for ${transactionData.currency}: $${rate}`);
-      transactionData.usdValue = parseFloat(transactionData.amount) * rate;
-      console.log(`Calculated USD value: $${transactionData.usdValue}`);
-    }
+    const rate = rates[transactionData.currency] || 0;
+    console.log(`Using rate for ${transactionData.currency}: $${rate}`);
+    const usdValue = parseFloat(transactionData.amount) * rate;
+    console.log(`Calculated USD value: $${usdValue}`);
     
     // Create the transaction
     const newTransaction = {
       ...transactionData,
       timestamp: new Date(),
-      pendingClaim: isPendingClaim
+      pendingClaim: isPendingClaim,
+      usdValue,
+      status: 'confirmed'
     };
     
     const result = await db.collection('transactions').insertOne(newTransaction);
