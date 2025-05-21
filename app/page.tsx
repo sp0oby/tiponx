@@ -129,7 +129,7 @@ export default function Home() {
           const userDataResults = await Promise.all(userDataPromises);
           const userDataMap = Object.fromEntries(userDataResults);
           
-          // Filter out transactions where either user is deleted
+          // Filter transactions where both users exist
           const validSentTransactions = sentData.filter((tx: any) => 
             userDataMap[tx.senderHandle] && userDataMap[tx.receiverHandle]
           );
@@ -141,9 +141,15 @@ export default function Home() {
           setUserTipsSent(validSentTransactions);
           setUserTipsReceived(validReceivedTransactions);
           
-          // Calculate total USD values
-          const totalSent = validSentTransactions.reduce((sum: number, tx: any) => sum + (tx.usdValue || 0), 0);
-          const totalReceived = validReceivedTransactions.reduce((sum: number, tx: any) => sum + (tx.usdValue || 0), 0);
+          // Calculate total USD values - only count confirmed transactions
+          const totalSent = validSentTransactions
+            .filter(tx => tx.status === 'confirmed')
+            .reduce((sum: number, tx: any) => sum + (tx.usdValue || 0), 0);
+            
+          const totalReceived = validReceivedTransactions
+            .filter(tx => tx.status === 'confirmed')
+            .reduce((sum: number, tx: any) => sum + (tx.usdValue || 0), 0);
+            
           setTotalTipsSentUsd(totalSent);
           setTotalTipsReceivedUsd(totalReceived);
         } else {
@@ -207,8 +213,8 @@ export default function Home() {
             id: tx._id || tx.id,
             senderHandle: tx.senderHandle,
             receiverHandle: tx.receiverHandle,
-            senderAvatar: tx.senderAvatar,
-            recipientAvatar: tx.recipientAvatar,
+            senderAvatar: tx.sender?.avatar || tx.senderAvatar,
+            recipientAvatar: tx.recipient?.avatar || tx.recipientAvatar,
             amount: tx.amount,
             currency: tx.currency,
             time: formatRelativeTime(tx.timestamp || tx.createdAt),
@@ -219,13 +225,12 @@ export default function Home() {
             usdValue: tx.usdValue,
             gasUsed: tx.gasUsed,
             gasFee: tx.gasFee,
-            pendingClaim: tx.pendingClaim || false
+            pendingClaim: tx.pendingClaim || false,
+            sender: tx.sender,
+            recipient: tx.recipient
           }));
           
           setRecentTransactions(formattedTransactions);
-          
-          // Still refresh in background to get any updates
-          refreshTransactions(true);
         }
       } catch (error) {
         console.error('Error fetching initial transactions:', error);
@@ -259,8 +264,8 @@ export default function Home() {
           id: tx._id || tx.id,
           senderHandle: tx.senderHandle,
           receiverHandle: tx.receiverHandle,
-          senderAvatar: tx.senderAvatar,
-          recipientAvatar: tx.recipientAvatar,
+          senderAvatar: tx.sender?.avatar || tx.senderAvatar,
+          recipientAvatar: tx.recipient?.avatar || tx.recipientAvatar,
           amount: tx.amount,
           currency: tx.currency,
           time: formatRelativeTime(tx.timestamp || tx.createdAt),
@@ -271,10 +276,29 @@ export default function Home() {
           usdValue: tx.usdValue,
           gasUsed: tx.gasUsed,
           gasFee: tx.gasFee,
-          pendingClaim: tx.pendingClaim || false
+          pendingClaim: tx.pendingClaim || false,
+          sender: tx.sender,
+          recipient: tx.recipient
         }));
         
-        setRecentTransactions(formattedTransactions);
+        // Merge with existing transactions to preserve user data
+        setRecentTransactions(prevTransactions => {
+          const txMap = new Map(prevTransactions.map(tx => [tx.id, tx]));
+          return formattedTransactions.map(tx => {
+            const existingTx = txMap.get(tx.id);
+            if (existingTx) {
+              return {
+                ...tx,
+                senderAvatar: tx.senderAvatar || existingTx.senderAvatar,
+                recipientAvatar: tx.recipientAvatar || existingTx.recipientAvatar,
+                sender: tx.sender || existingTx.sender,
+                recipient: tx.recipient || existingTx.recipient
+              };
+            }
+            return tx;
+          });
+        });
+        
         setLastRefreshTime(Date.now());
       }
     } catch (error) {
