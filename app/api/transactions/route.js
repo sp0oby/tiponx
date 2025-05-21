@@ -36,6 +36,10 @@ export async function GET(request) {
       existingHandlesSet.has(tx.receiverHandle)
     );
     
+    // Get exchange rates for USD value calculation
+    console.log('Fetching exchange rates for transaction enrichment...');
+    const rates = await getExchangeRates();
+    
     // Only fetch user data for valid transactions
     const uniqueHandles = new Set(
       validTransactions.flatMap(tx => [tx.senderHandle, tx.receiverHandle])
@@ -64,10 +68,18 @@ export async function GET(request) {
       }
     }));
 
-    // Enrich transactions with user data
+    // Enrich transactions with user data and ensure USD values
     const enrichedTransactions = validTransactions.map(tx => {
       const senderData = userDataMap.get(tx.senderHandle);
       const recipientData = userDataMap.get(tx.receiverHandle);
+      
+      // Calculate USD value if not present
+      let usdValue = tx.usdValue;
+      if (!usdValue && tx.amount && tx.currency) {
+        const rate = rates[tx.currency] || 0;
+        usdValue = parseFloat(tx.amount) * rate;
+        console.log(`Calculated missing USD value for ${tx.currency}: $${usdValue}`);
+      }
       
       return {
         ...tx,
@@ -76,7 +88,9 @@ export async function GET(request) {
         senderName: senderData?.name,
         recipientName: recipientData?.name,
         sender: senderData,
-        recipient: recipientData
+        recipient: recipientData,
+        usdValue,
+        status: tx.status || 'confirmed' // Ensure status is set
       };
     });
     
