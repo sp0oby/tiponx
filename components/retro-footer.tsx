@@ -59,7 +59,7 @@ export function RetroFooter() {
                 <XLogo className="h-4 w-4" />
               </a>
               <a
-                href="https://t.me/tiponx"
+                href="https://t.me/wearetipping"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 border-2 border-black flex items-center justify-center bg-gray-100 hover:bg-gray-200"
