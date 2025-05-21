@@ -63,14 +63,14 @@ export function CreatorRankings() {
 
   return (
     <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-      <CardHeader className="border-b-4 border-black bg-gradient-to-r from-purple-500 to-pink-500 p-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <CardTitle className="font-pixel text-2xl text-white">Creator Rankings</CardTitle>
+      <CardHeader className="border-b-4 border-black bg-gradient-to-r from-purple-500 to-pink-500 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <CardTitle className="font-pixel text-xl sm:text-2xl text-white">Creator Rankings</CardTitle>
           <Select
             value={timeframe}
             onValueChange={(value) => setTimeframe(value)}
           >
-            <SelectTrigger className="w-[180px] bg-white border-2 border-black font-pixel">
+            <SelectTrigger className="w-full sm:w-[180px] bg-white border-2 border-black font-pixel text-sm">
               <SelectValue placeholder="Select timeframe" />
             </SelectTrigger>
             <SelectContent>
@@ -88,40 +88,40 @@ export function CreatorRankings() {
             <p className="font-pixel">Loading rankings...</p>
           </div>
         ) : (
-          <div className="space-y-4 p-4">
+          <div className="space-y-2 sm:space-y-4 p-2 sm:p-4">
             {creators.map((creator, index) => (
               <div
                 key={creator._id}
-                className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg border-2 border-black bg-white hover:bg-gray-50 transition-colors gap-4"
+                className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 sm:p-4 rounded-lg border-2 border-black bg-white hover:bg-gray-50 transition-colors gap-2 sm:gap-4"
               >
-                <div className="flex items-center space-x-4 w-full sm:w-auto">
-                  <div className="flex items-center justify-center w-10">
+                <div className="flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto">
+                  <div className="flex items-center justify-center w-6 sm:w-10">
                     {getRankIcon(index)}
                   </div>
-                  <Avatar className="h-12 w-12 border-2 border-black">
+                  <Avatar className="h-8 w-8 sm:h-12 sm:w-12 border-2 border-black">
                     <AvatarImage src={creator.avatar || "/placeholder.svg"} />
-                    <AvatarFallback className="bg-black text-white font-pixel">
+                    <AvatarFallback className="bg-black text-white font-pixel text-[10px] sm:text-base">
                       {creator.name.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <Link href={`/creator/${creator.handle.replace('@', '')}`} className="hover:underline">
-                      <h3 className="font-pixel text-lg">{creator.name}</h3>
+                      <h3 className="font-pixel text-sm sm:text-lg leading-tight">{creator.name}</h3>
                     </Link>
-                    <p className="font-mono text-sm text-gray-600">{creator.handle}</p>
+                    <p className="font-mono text-[10px] sm:text-sm text-gray-600">{creator.handle}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                <div className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-0 w-full sm:w-auto justify-between sm:justify-end">
                   <div className="text-left sm:text-right">
-                    <p className="font-mono text-sm text-gray-600">Total Tips</p>
-                    <p className="font-pixel">${creator.totalTipsUsd.toFixed(2)}</p>
+                    <p className="font-mono text-[10px] sm:text-sm text-gray-600">Total Tips</p>
+                    <p className="font-pixel text-[11px] sm:text-base">${creator.totalTipsUsd.toFixed(2)}</p>
                   </div>
                   <div className="text-left sm:text-right">
-                    <p className="font-mono text-sm text-gray-600">Upvotes</p>
-                    <p className="font-pixel">{creator.upvoteCount}</p>
+                    <p className="font-mono text-[10px] sm:text-sm text-gray-600">Upvotes</p>
+                    <p className="font-pixel text-[11px] sm:text-base">{creator.upvoteCount}</p>
                   </div>
-                  <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-2 border-black whitespace-nowrap">
+                  <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-2 border-black whitespace-nowrap text-[10px] sm:text-sm">
                     Score: {Math.round(creator.score)}
                   </Badge>
                 </div>

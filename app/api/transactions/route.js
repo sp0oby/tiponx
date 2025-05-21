@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
+import { getExchangeRates } from '@/lib/blockchain';
 
 // GET /api/transactions - Get transactions with optional filtering
 export async function GET(request) {
@@ -102,17 +103,17 @@ export async function POST(request) {
       console.log('Transaction marked as pending claim');
     }
     
-    // Set USD value if not provided (in a real app, you would fetch this from an exchange rate API)
+    // Get real-time exchange rates
+    console.log('Fetching current exchange rates...');
+    const rates = await getExchangeRates();
+    console.log('Exchange rates:', rates);
+    
+    // Calculate USD value using real exchange rates
     if (!transactionData.usdValue) {
-      // Simple mock conversion rates
-      const mockRates = {
-        'ETH': 2500,
-        'USDC': 1,
-        'SOL': 95
-      };
-      
-      const rate = mockRates[transactionData.currency] || 0;
+      const rate = rates[transactionData.currency] || 0;
+      console.log(`Using rate for ${transactionData.currency}: $${rate}`);
       transactionData.usdValue = parseFloat(transactionData.amount) * rate;
+      console.log(`Calculated USD value: $${transactionData.usdValue}`);
     }
     
     // Create the transaction

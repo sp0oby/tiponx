@@ -1,43 +1,28 @@
 import NextAuth from 'next-auth';
 import TwitterProvider from 'next-auth/providers/twitter';
-import { getDb } from '../../../lib/mongodb';
+import { getDb } from '@/lib/mongodb';
 
 const DEFAULT_BIO = 'Creator on X - Share your support with tips!';
 
 export const authOptions = {
   providers: [
     TwitterProvider({
-      clientId: process.env.TWITTER_CLIENT_ID,
-      clientSecret: process.env.TWITTER_CLIENT_SECRET,
+      clientId: process.env.TWITTER_CLIENT_ID!,
+      clientSecret: process.env.TWITTER_CLIENT_SECRET!,
       version: "2.0",
       authorization: {
-        url: "https://twitter.com/i/oauth2/authorize",
+        url: "https://x.com/i/oauth2/authorize",
         params: {
-          scope: "users.read tweet.read offline.access",
-          force_login: "true"
-        },
-      },
-      userinfo: {
-        url: 'https://api.twitter.com/2/users/me',
-        params: {
-          'user.fields': 'description,profile_image_url'
+          scope: "users.read tweet.read offline.access"
         }
       }
     }),
   ],
+  secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account, profile }: any) {
       if (account.provider === "twitter") {
         try {
-          // Debug logging
-          console.log('Twitter Profile Data:', {
-            username: profile.data.username,
-            name: profile.data.name,
-            description: profile.data.description,
-            profile_image_url: profile.data.profile_image_url,
-            raw: profile.data
-          });
-
           const db = await getDb();
           const handle = '@' + profile.data.username;
           
@@ -84,14 +69,14 @@ export const authOptions = {
       }
       return true;
     },
-    async session({ session, token }) {
+    async session({ session, token }: any) {
       // Add Twitter handle to session
       if (token.handle) {
         session.user.handle = token.handle;
       }
       return session;
     },
-    async jwt({ token, user, account, profile }) {
+    async jwt({ token, user, account, profile }: any) {
       // Add Twitter handle to token
       if (account?.provider === 'twitter' && profile?.data?.username) {
         token.handle = '@' + profile.data.username;
@@ -105,6 +90,8 @@ export const authOptions = {
     signIn: '/', // Use home page as sign in page
     error: '/', // Use home page as error page
   },
+  debug: true // Enable debug logs
 };
 
-export default NextAuth(authOptions); 
+const handler = NextAuth(authOptions);
+export { handler as GET, handler as POST } 

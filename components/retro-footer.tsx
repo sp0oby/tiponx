@@ -1,6 +1,6 @@
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Heart, Github } from "lucide-react"
+import { Heart, Github, Send } from "lucide-react"
 import { XLogo } from "@/components/icons/x-logo"
 
 export function RetroFooter() {
@@ -51,7 +51,7 @@ export function RetroFooter() {
             <h3 className="font-pixel text-lg mb-3">Connect</h3>
             <div className="flex space-x-3">
               <a
-                href="https://twitter.com/tiponx"
+                href="https://twitter.com/wearetipping"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 border-2 border-black flex items-center justify-center bg-gray-100 hover:bg-gray-200"
@@ -59,15 +59,15 @@ export function RetroFooter() {
                 <XLogo className="h-4 w-4" />
               </a>
               <a
-                href="https://discord.gg/tiponx"
+                href="https://t.me/tiponx"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 border-2 border-black flex items-center justify-center bg-gray-100 hover:bg-gray-200"
               >
-                <span className="font-pixel">D</span>
+                <Send className="h-4 w-4" />
               </a>
               <a
-                href="https://github.com/tiponx"
+                href="https://github.com/sp0oby/tiponx"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 border-2 border-black flex items-center justify-center bg-gray-100 hover:bg-gray-200"
@@ -92,7 +92,7 @@ export function RetroFooter() {
           </div>
         </div>
         
-        <div className="mt-8 pt-4 border-t border-dashed border-gray-300 text-center text-sm font-mono">
+        <div className="text-center text-sm font-mono mt-8 pt-8 border-t-2 border-black">
           <p>© 2025 TipOnX. All rights reserved.</p>
         </div>
       </div>

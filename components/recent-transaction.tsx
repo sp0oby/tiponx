@@ -183,46 +183,46 @@ export function RecentTransaction({ transaction }: RecentTransactionProps) {
   }
 
   return (
-    <div className="p-4 border-b border-dashed border-gray-300 hover:bg-gray-50 transition-colors">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center space-x-2">
-          <Avatar className="h-8 w-8 border-2 border-black">
+    <div className="p-3 sm:p-4 border-b border-dashed border-gray-300 hover:bg-gray-50 transition-colors">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-2">
+        <div className="flex items-center space-x-1.5 sm:space-x-2">
+          <Avatar className="h-6 w-6 sm:h-8 sm:w-8 border-2 border-black">
             <AvatarImage src={transaction.senderAvatar || "/placeholder.svg"} />
-            <AvatarFallback className="bg-gray-200 font-pixel text-xs">
+            <AvatarFallback className="bg-gray-200 font-pixel text-[10px] sm:text-xs">
               {transaction.senderHandle.substring(1, 3).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <span className="font-pixel text-sm">{transaction.senderHandle}</span>
+          <span className="font-pixel text-xs sm:text-sm">{transaction.senderHandle}</span>
           <span className="text-gray-500">→</span>
-          <Avatar className="h-8 w-8 border-2 border-black">
+          <Avatar className="h-6 w-6 sm:h-8 sm:w-8 border-2 border-black">
             <AvatarImage src={transaction.recipientAvatar || "/placeholder.svg"} />
-            <AvatarFallback className="bg-gray-200 font-pixel text-xs">
+            <AvatarFallback className="bg-gray-200 font-pixel text-[10px] sm:text-xs">
               {transaction.receiverHandle.substring(1, 3).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <span className="font-pixel text-sm">{transaction.receiverHandle}</span>
+          <span className="font-pixel text-xs sm:text-sm">{transaction.receiverHandle}</span>
           {transaction.chain && getChainIcon(transaction.chain)}
           {getStatusIcon(transaction.status, transaction.confirmations)}
         </div>
         <div className="flex flex-col items-end">
-          <Badge className={`${getCurrencyColor(transaction.currency)} text-black font-mono mb-1`}>
+          <Badge className={`${getCurrencyColor(transaction.currency)} text-black font-mono text-xs sm:text-sm mb-1`}>
             {transaction.amount} {transaction.currency}
           </Badge>
           {transaction.usdValue && (
-            <span className="text-xs text-gray-500 font-mono">
+            <span className="text-[10px] sm:text-xs text-gray-500 font-mono">
               ≈ ${transaction.usdValue.toFixed(2)}
             </span>
           )}
         </div>
       </div>
-      <div className="flex justify-between items-center text-xs">
+      <div className="flex justify-between items-center text-[10px] sm:text-xs">
         <div className="text-gray-500 font-mono flex items-center">
           <span className="mr-2">{transaction.time}</span>
           {transaction.gasUsed && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
-                  <span className="text-gray-400">Gas: {transaction.gasFee}</span>
+                  <span className="text-gray-400 hidden sm:inline">Gas: {transaction.gasFee}</span>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Gas used: {transaction.gasUsed}</p>

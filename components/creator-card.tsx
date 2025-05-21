@@ -186,36 +186,36 @@ export function CreatorCard({
   return (
     <>
       <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
-        <CardHeader className={`${getCardColor()} border-b-4 border-black p-4`}>
-          <div className="flex items-center space-x-3">
-            <Avatar className="h-12 w-12 border-4 border-black">
+        <CardHeader className={`${getCardColor()} border-b-4 border-black p-2 sm:p-4`}>
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <Avatar className="h-8 w-8 sm:h-12 sm:w-12 border-2 sm:border-4 border-black">
               <AvatarImage src={creator.avatar || "/placeholder.svg"} alt={creator.name} />
-              <AvatarFallback className="bg-black text-white font-pixel">
+              <AvatarFallback className="bg-black text-white font-pixel text-[10px] sm:text-base">
                 {creator.name.substring(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
               <Link href={`/creator/${creator.handle.replace('@', '')}`} className="hover:underline">
-                <h3 className="font-pixel text-lg">{creator.name}</h3>
+                <h3 className="font-pixel text-sm sm:text-lg leading-tight">{creator.name}</h3>
               </Link>
-              <p className="font-mono text-sm">{creator.handle}</p>
+              <p className="font-mono text-[10px] sm:text-sm">{creator.handle}</p>
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className="p-4">
-          <p className="text-sm mb-4">{creator.description}</p>
+        <CardContent className="p-2 sm:p-4">
+          <p className="text-[11px] sm:text-sm mb-2 sm:mb-4">{creator.description}</p>
           
           {creator.isClaimed === false ? (
-            <Badge className="border-2 border-black font-mono bg-orange-100 text-orange-800 mb-2">
+            <Badge className="border-2 border-black font-mono bg-orange-100 text-orange-800 mb-2 text-[10px] sm:text-sm">
               Unclaimed Profile
             </Badge>
           ) : (
-            <div className="flex flex-wrap gap-2 mb-2">
+            <div className="flex flex-wrap gap-1 sm:gap-2 mb-2">
               {Object.keys(creator.wallets).map((wallet) => (
                 <Badge 
                   key={wallet}
-                  className="border-2 border-black font-mono bg-green-100 text-green-800"
+                  className="border-2 border-black font-mono bg-green-100 text-green-800 text-[10px] sm:text-sm"
                 >
                   <Wallet className="h-3 w-3 mr-1" />
                   {wallet}
@@ -225,21 +225,21 @@ export function CreatorCard({
           )}
           
           {!hasCompatibleWallet() && Object.keys(creator.wallets).length > 0 && (
-            <div className="text-xs text-amber-600 flex items-center mt-2">
+            <div className="text-[10px] sm:text-xs text-amber-600 flex items-center mt-2">
               <AlertCircle className="h-3 w-3 mr-1" />
               <span>Connect a wallet to tip with these tokens</span>
             </div>
           )}
         </CardContent>
 
-        <CardFooter className="border-t-4 border-black p-4 bg-gray-100 flex flex-col sm:flex-row justify-between gap-4">
-          <div className="flex gap-2 w-full sm:w-auto justify-center sm:justify-start">
+        <CardFooter className="border-t-4 border-black p-2 sm:p-4 bg-gray-100 flex flex-col sm:flex-row justify-between gap-2 sm:gap-4">
+          <div className="flex gap-1 sm:gap-2 w-full sm:w-auto">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex-1 sm:flex-none">
                     <Button 
-                      className={`w-full sm:w-auto border-2 font-pixel ${
+                      className={`w-full sm:w-auto border-2 font-pixel text-[11px] sm:text-base ${
                         (hasCompatibleWallet() || creator.isClaimed === false)
                           ? 'bg-black text-white border-white hover:bg-gray-800' 
                           : 'bg-gray-300 text-gray-700 border-gray-500 cursor-not-allowed'
@@ -270,13 +270,13 @@ export function CreatorCard({
                     <Button
                       variant="outline"
                       size="default"
-                      className={`border-2 border-black font-pixel ${
+                      className={`border-2 border-black font-pixel text-[11px] sm:text-base ${
                         hasUpvoted ? 'bg-green-100 text-green-600 hover:bg-green-50' : 'hover:bg-gray-100'
                       }`}
                       onClick={handleUpvote}
                       disabled={isUpvoting || hasUpvoted}
                     >
-                      <ThumbsUp className={`h-4 w-4 ${hasUpvoted ? 'fill-green-600' : ''} mr-1`} />
+                      <ThumbsUp className={`h-3 sm:h-4 w-3 sm:w-4 ${hasUpvoted ? 'fill-green-600' : ''} mr-1`} />
                       <span>{upvoteCount}</span>
                     </Button>
                   </TooltipTrigger>
@@ -290,11 +290,11 @@ export function CreatorCard({
 
           <Button 
             variant="outline" 
-            className="border-2 border-black font-pixel w-full sm:w-auto"
+            className="border-2 border-black font-pixel text-[11px] sm:text-base w-full sm:w-auto"
             onClick={() => setIsQRModalOpen(true)}
           >
-            <QrCode className="h-4 w-4 mr-2" />
-            QR Code
+            <QrCode className="h-3 sm:h-4 w-3 sm:w-4 mr-1 sm:mr-2" />
+            QR
           </Button>
         </CardFooter>
       </Card>

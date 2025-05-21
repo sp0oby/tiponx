@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button"
 import { RetroContainer } from "@/components/retro-container"
 import { RetroHeader } from "@/components/retro-header"
 import { RetroFooter } from "@/components/retro-footer"
-import { ArrowLeft, HelpCircle, Mail } from "lucide-react"
+import { ArrowLeft, HelpCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { XLogo } from "@/components/icons/x-logo"
 import {
   Accordion,
   AccordionContent,
@@ -32,7 +33,7 @@ export default function HelpPage() {
           </Button>
         </div>
 
-        <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mb-8">
+        <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
           <CardHeader className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white border-b-4 border-black">
             <CardTitle className="font-pixel text-3xl">Help Center</CardTitle>
             <CardDescription className="text-white opacity-90 font-mono">
@@ -66,31 +67,21 @@ export default function HelpPage() {
 
                   <AccordionItem value="item-3" className="border-b-2 border-black">
                     <AccordionTrigger className="font-pixel text-left">
-                      Are there any fees?
+                      How do I withdraw my tips?
                     </AccordionTrigger>
                     <AccordionContent className="font-mono">
-                      TipOnX doesn't charge any platform fees. You only pay the standard network transaction fees 
-                      for the blockchain you're using (gas fees for Ethereum, transaction fees for Solana).
+                      Tips are sent directly to your connected wallet addresses. You can manage these 
+                      through your favorite wallet app like MetaMask or Phantom.
                     </AccordionContent>
                   </AccordionItem>
 
                   <AccordionItem value="item-4" className="border-b-2 border-black">
                     <AccordionTrigger className="font-pixel text-left">
-                      How do I verify my X account?
+                      Are there any fees?
                     </AccordionTrigger>
                     <AccordionContent className="font-mono">
-                      After connecting your X account, you'll receive a unique verification code. Post this code 
-                      in a tweet, and our system will automatically verify your account ownership.
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="item-5" className="border-b-2 border-black">
-                    <AccordionTrigger className="font-pixel text-left">
-                      Is my wallet information secure?
-                    </AccordionTrigger>
-                    <AccordionContent className="font-mono">
-                      Yes! We never store your private keys. We only store your public wallet addresses, 
-                      which are safely encrypted in our database.
+                      TipOnX doesn't charge any platform fees. You only pay the standard network 
+                      transaction fees for the blockchain you're using.
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
@@ -105,10 +96,16 @@ export default function HelpPage() {
                   <p className="font-mono text-gray-600 mb-4">
                     Can't find what you're looking for? Our support team is here to help!
                   </p>
-                  <Button className="bg-black text-white border-2 border-white hover:bg-gray-800 font-pixel">
-                    <Mail className="mr-2 h-4 w-4" />
-                    Contact Support
-                  </Button>
+                  <a 
+                    href="https://twitter.com/wearetipping"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button className="bg-black text-white border-2 border-white hover:bg-gray-800 font-pixel">
+                      <XLogo className="mr-2 h-4 w-4" />
+                      Contact Support
+                    </Button>
+                  </a>
                 </Card>
               </section>
             </div>

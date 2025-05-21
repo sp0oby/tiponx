@@ -316,8 +316,15 @@ export function TipModal({
       if (tipResult.success) {
         try {
           console.log('Blockchain transaction successful, saving to database...')
-          const transactionId = (tipResult as TipSuccess & { txHash?: string }).signature || 
-                              (tipResult as TipSuccess & { txHash?: string }).txHash || ''
+          // Extract transaction ID based on chain
+          const transactionId = SOLANA_TOKENS.includes(currency)
+            ? (tipResult as TipSuccess).signature
+            : (tipResult as TipSuccess).txHash || (tipResult as TipSuccess).signature
+
+          if (!transactionId) {
+            throw new Error('No transaction ID found in successful transaction result')
+          }
+
           const savedTransaction = await saveTransaction(
             transactionId,
             chain,
@@ -327,11 +334,12 @@ export function TipModal({
 
           console.log('Transaction saved to database:', savedTransaction)
 
-          // Set success result
+          // Set success result with both properties
           setResult({
             success: true,
             message: `Successfully sent ${amount} ${currency} to ${creator.handle}`,
-            txHash: transactionId
+            signature: (tipResult as TipSuccess).signature,
+            txHash: (tipResult as TipSuccess).txHash
           })
 
           // Call onSuccess callback if provided
@@ -454,10 +462,28 @@ export function TipModal({
               </AlertTitle>
               <AlertDescription className="font-mono text-xs">
                 {result.message}
-                {result.success && result.txHash && (
+                {result.success && (result.txHash || result.signature) && (
                   <div className="mt-2">
-                    <span className="text-gray-600">Transaction Hash: </span>
-                    <code className="bg-gray-100 px-1 rounded">{result.txHash.slice(0, 10)}...{result.txHash.slice(-8)}</code>
+                    <span className="text-gray-600">View on: </span>
+                    {SOLANA_TOKENS.includes(currency) ? (
+                      <a 
+                        href={`https://solscan.io/tx/${result.signature}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        Solscan
+                      </a>
+                    ) : (
+                      <a 
+                        href={`https://etherscan.io/tx/${result.txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        Etherscan
+                      </a>
+                    )}
                   </div>
                 )}
               </AlertDescription>

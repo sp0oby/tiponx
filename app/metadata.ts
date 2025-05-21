@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   description: "Support your favorite X (Twitter) creators directly with cryptocurrency tips. Easy, secure, and instant Web3 tipping platform for content creators.",
   generator: 'Next.js',
   applicationName: 'TipOnX',
-  keywords: ['crypto tipping', 'X creators', 'Twitter tips', 'Web3', 'cryptocurrency', 'content creators', 'social media tipping', 'blockchain'],
+  keywords: ['crypto tipping', 'X creators', 'Twitter tips', 'Web3', 'cryptocurrency', 'content creators', 'social media tipping', 'blockchain', 'Ethereum', 'Solana', 'USDC', 'digital payments'],
   authors: [{ name: 'TipOnX Team' }],
   creator: 'TipOnX',
   publisher: 'TipOnX',
@@ -17,6 +17,10 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://tiponx.com'),
   alternates: {
     canonical: '/',
+    languages: {
+      'en-US': '/en-US',
+      'es-ES': '/es-ES',
+    },
   },
   openGraph: {
     title: 'TipOnX - Web3 Tipping for X Creators',
@@ -40,10 +44,12 @@ export const metadata: Metadata = {
     description: 'Support your favorite X (Twitter) creators directly with cryptocurrency tips. Easy, secure, and instant Web3 tipping platform.',
     creator: '@TipOnX',
     images: ['/og-image.jpg'],
+    site: '@TipOnX',
   },
   robots: {
     index: true,
     follow: true,
+    nocache: true,
     googleBot: {
       index: true,
       follow: true,
@@ -64,6 +70,13 @@ export const metadata: Metadata = {
         url: '/favicon.svg',
         type: 'image/svg+xml',
       }
+    ],
+    shortcut: [
+      {
+        url: '/favicon.svg',
+        type: 'image/svg+xml',
+      }
     ]
-  }
+  },
+  manifest: '/manifest.json'
 } 

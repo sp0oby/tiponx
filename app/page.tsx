@@ -603,22 +603,22 @@ export default function Home() {
     <RetroContainer>
       <RetroHeader />
       <WelcomeModal />
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 gap-8 mb-8">
+      <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+        <div className="grid grid-cols-1 gap-4 sm:gap-8 mb-4 sm:mb-8">
           <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-            <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-b-4 border-black">
-              <div className="flex items-center justify-between">
+            <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-b-4 border-black p-3 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                  <CardTitle className="text-3xl font-pixel">TipOnX</CardTitle>
-                  <CardDescription className="text-white opacity-90 font-mono">
+                  <CardTitle className="text-xl sm:text-3xl font-pixel">TipOnX</CardTitle>
+                  <CardDescription className="text-white opacity-90 font-mono text-sm sm:text-base">
                     Tip your favorite X creators with crypto
                   </CardDescription>
                 </div>
                 <Button
-                  className="bg-black text-white border-2 border-white hover:bg-gray-800 font-pixel shadow-[4px_4px_0px_0px_rgba(255,255,255,0.5)]"
+                  className="bg-black text-white border-2 border-white hover:bg-gray-800 font-pixel shadow-[4px_4px_0px_0px_rgba(255,255,255,0.5)] text-[11px] sm:text-base w-full sm:w-auto"
                   onClick={handleConnectTwitter}
                 >
-                  <Twitter className="mr-2 h-4 w-4" />
+                  <Twitter className="mr-2 h-3 sm:h-4 w-3 sm:w-4" />
                   {session ? 'Disconnect X' : 'Connect X'}
                 </Button>
               </div>
@@ -626,47 +626,47 @@ export default function Home() {
           </Card>
         </div>
 
-        <Tabs defaultValue="creators" className="mb-8">
-          <TabsList className="grid grid-cols-3 w-full border-4 border-black mb-4 p-0 h-auto">
+        <Tabs defaultValue="creators" className="mb-4 sm:mb-8">
+          <TabsList className="grid grid-cols-3 w-full border-4 border-black mb-2 sm:mb-4 p-0 h-auto">
             <TabsTrigger
               value="creators"
-              className="font-pixel py-3 data-[state=active]:bg-cyan-400 data-[state=active]:text-black data-[state=active]:shadow-inner"
+              className="font-pixel py-2 sm:py-3 text-[11px] sm:text-base data-[state=active]:bg-cyan-400 data-[state=active]:text-black data-[state=active]:shadow-inner"
             >
               Creators
             </TabsTrigger>
             <TabsTrigger
               value="recent"
-              className="font-pixel py-3 data-[state=active]:bg-pink-400 data-[state=active]:text-black data-[state=active]:shadow-inner"
+              className="font-pixel py-2 sm:py-3 text-[11px] sm:text-base data-[state=active]:bg-pink-400 data-[state=active]:text-black data-[state=active]:shadow-inner"
             >
               Recent Tips
             </TabsTrigger>
             <TabsTrigger
               value="profile"
-              className="font-pixel py-3 data-[state=active]:bg-yellow-400 data-[state=active]:text-black data-[state=active]:shadow-inner"
+              className="font-pixel py-2 sm:py-3 text-[11px] sm:text-base data-[state=active]:bg-yellow-400 data-[state=active]:text-black data-[state=active]:shadow-inner"
             >
               My Profile
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="creators" className="mt-0">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="font-pixel text-lg">Creators You Can Tip</h2>
-              <div className="flex items-center gap-4">
-                <div className="relative">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4">
+              <h2 className="font-pixel text-base sm:text-lg">Creators You Can Tip</h2>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
+                <div className="relative flex-1 sm:flex-none">
                   <Input
                     type="text"
                     placeholder="Search by X handle..."
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10 border-2 border-black font-mono"
+                    className="pl-10 border-2 border-black font-mono text-[11px] sm:text-sm w-full"
                   />
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 sm:h-4 w-3 sm:w-4 text-gray-500" />
                 </div>
                 <Button
-                  className="bg-teal-500 hover:bg-teal-600 text-white font-pixel border-2 border-black"
+                  className="bg-teal-500 hover:bg-teal-600 text-white font-pixel border-2 border-black text-[11px] sm:text-base w-full sm:w-auto"
                   onClick={handleInviteCreator}
                 >
-                  <UserPlus className="mr-2 h-4 w-4" />
+                  <UserPlus className="mr-1 sm:mr-2 h-3 sm:h-4 w-3 sm:w-4" />
                   Invite Creator
                 </Button>
               </div>
