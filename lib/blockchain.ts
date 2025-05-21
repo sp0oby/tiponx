@@ -111,55 +111,197 @@ let exchangeRatesCache: {
   }
 }
 
+// Token addresses for price lookup
+const PRICE_LOOKUP_ADDRESSES: Record<string, string> = {
+  ETH: 'ethereum', // Use 'ethereum' as identifier
+  WETH: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+  MOG: '0xaaeE1A9723aaDB7afA2810263653A34bA2C21C7a',
+  CULT: '0x0000000000c5dc95539589fbD24BE07c6C14eCa4',
+  SPX6900: '0xE0f63A424a4439cBE457D80E4f4b51aD25b2c56C',
+  PEPE: '0x6982508145454Ce325dDbE47a25d4ec3d2311933',
+  SOL: 'solana', // Use 'solana' as identifier
+  FARTCOIN: '9BB6NFEcjBCtnNLFko2FqVQBq8HHM13kCyYcdQbgpump',
+  TRENCHER: '8ncucXv6U6epZKHPbgaEBcEK399TpHGKCquSt4RnmX4f'
+}
+
+// Define Solana tokens for easy lookup
+const SOLANA_TOKENS = ['SOL', 'FARTCOIN', 'TRENCHER']
+
 // Get current USD prices for tokens
 async function getExchangeRates(): Promise<ExchangeRates> {
   try {
-    // Use cached rates if they're less than 1 minute old
+    // Use cached rates if they're less than 30 seconds old
     const now = Date.now()
-    if (now - exchangeRatesCache.timestamp < 60 * 1000) {
+    if (now - exchangeRatesCache.timestamp < 30 * 1000) {
+      console.log('Using cached rates:', exchangeRatesCache.rates)
       return exchangeRatesCache.rates
     }
 
-    // Fetch new rates from CoinGecko
-    const response = await axios.get(`${COINGECKO_API}/simple/price`, {
-      params: {
-        ids: 'ethereum,solana,usd-coin,tether,dai,wrapped-ethereum,raydium,serum,mog-coin,cult-dao,spx6900,pepe,fartcoin,trencher',
-        vs_currencies: 'usd'
+    const rates = { ...exchangeRatesCache.rates } // Start with current rates
+
+    // Fetch prices from DexScreener
+    const fetchDexScreenerPrice = async (chain: string, address: string, symbol: string): Promise<number> => {
+      try {
+        // Format the address based on chain
+        let formattedAddress: string
+        if (chain === 'solana') {
+          // For Solana tokens, we need to use the correct format
+          formattedAddress = symbol.toLowerCase() === 'sol' ? 'solana' : `solana_${address}`
+          console.log(`Using Solana formatted address for ${symbol}: ${formattedAddress}`)
+        } else {
+          // For Ethereum tokens, use the address directly or 'ethereum' for ETH
+          formattedAddress = symbol.toLowerCase() === 'eth' ? 'ethereum' : address
+        }
+
+        console.log(`Fetching price from DexScreener for ${symbol} (${chain}) at address: ${formattedAddress}`)
+        
+        // For Solana tokens, try both with and without the solana_ prefix
+        const urls = chain === 'solana' && symbol !== 'SOL' 
+          ? [
+              `https://api.dexscreener.com/latest/dex/tokens/${formattedAddress}`,
+              `https://api.dexscreener.com/latest/dex/tokens/${address}`
+            ]
+          : [`https://api.dexscreener.com/latest/dex/tokens/${formattedAddress}`]
+
+        let response
+        for (const url of urls) {
+          console.log(`Trying URL: ${url}`)
+          response = await axios.get(url)
+          if (response.data.pairs && response.data.pairs.length > 0) {
+            break
+          }
+        }
+        
+        if (response?.data.pairs && response.data.pairs.length > 0) {
+          // Sort pairs by liquidity to get the most liquid one
+          const sortedPairs = response.data.pairs.sort((a: any, b: any) => 
+            (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0)
+          )
+
+          const mostLiquidPair = sortedPairs[0]
+          console.log(`Most liquid pair for ${symbol}:`, {
+            dexId: mostLiquidPair.dexId,
+            liquidity: mostLiquidPair.liquidity?.usd,
+            price: mostLiquidPair.priceUsd
+          })
+
+          const price = parseFloat(mostLiquidPair.priceUsd) || 0
+          console.log(`Found DexScreener price for ${symbol}: $${price}`)
+          return price
+        }
+        
+        console.log(`No trading pairs found for ${symbol} on DexScreener`)
+        return 0
+      } catch (error) {
+        console.error(`Error fetching DexScreener price for ${symbol}:`, error)
+        return 0
+      }
+    }
+
+    // Fetch prices from CoinGecko as fallback
+    const fetchCoinGeckoPrice = async (): Promise<Partial<ExchangeRates>> => {
+      try {
+        console.log('Fetching prices from CoinGecko as fallback...')
+        const response = await axios.get(`${COINGECKO_API}/simple/price`, {
+          params: {
+            ids: 'ethereum,solana,usd-coin,tether,dai,wrapped-ethereum,raydium,serum,mog-coin,cult-dao,spx6900,pepe,fartcoin,trencher',
+            vs_currencies: 'usd'
+          }
+        })
+
+        if (!response.data) {
+          throw new Error('No data received from CoinGecko')
+        }
+
+        return {
+          ETH: response.data.ethereum?.usd,
+          USDC: response.data['usd-coin']?.usd,
+          USDT: response.data.tether?.usd,
+          DAI: response.data.dai?.usd,
+          WETH: response.data['wrapped-ethereum']?.usd,
+          MOG: response.data['mog-coin']?.usd,
+          CULT: response.data['cult-dao']?.usd,
+          SPX6900: response.data.spx6900?.usd,
+          PEPE: response.data.pepe?.usd,
+          SOL: response.data.solana?.usd,
+          RAY: response.data.raydium?.usd,
+          SRM: response.data.serum?.usd,
+          FARTCOIN: response.data.fartcoin?.usd,
+          TRENCHER: response.data.trencher?.usd
+        }
+      } catch (error) {
+        console.error('Error fetching CoinGecko prices:', error)
+        return {}
+      }
+    }
+
+    // Fetch major token prices first from DexScreener
+    console.log('Fetching major token prices from DexScreener...')
+    const [ethPrice, solPrice] = await Promise.all([
+      fetchDexScreenerPrice('ethereum', 'eth', 'ETH'),
+      fetchDexScreenerPrice('solana', 'sol', 'SOL')
+    ])
+
+    rates.ETH = ethPrice || rates.ETH
+    rates.WETH = ethPrice || rates.WETH // WETH follows ETH price
+    rates.SOL = solPrice || rates.SOL
+
+    // Fetch other token prices from DexScreener in parallel
+    console.log('Fetching other token prices from DexScreener...')
+    const tokenPromises = Object.entries(PRICE_LOOKUP_ADDRESSES)
+      .filter(([symbol]) => !['ETH', 'WETH', 'SOL', 'USDC', 'USDT', 'DAI'].includes(symbol))
+      .map(async ([symbol, address]) => {
+        const chain = SOLANA_TOKENS.includes(symbol) ? 'solana' : 'ethereum'
+        const price = await fetchDexScreenerPrice(chain, address, symbol)
+        console.log(`Setting DexScreener price for ${symbol}: $${price}`)
+        rates[symbol as keyof ExchangeRates] = price
+      })
+
+    await Promise.all(tokenPromises)
+
+    // Fetch CoinGecko prices as fallback for any missing or zero prices
+    const coingeckoRates = await fetchCoinGeckoPrice()
+    
+    // Merge rates, preferring DexScreener prices over CoinGecko
+    Object.entries(rates).forEach(([symbol, price]) => {
+      if (price === 0 && coingeckoRates[symbol as keyof ExchangeRates]) {
+        console.log(`Using CoinGecko price for ${symbol}: $${coingeckoRates[symbol as keyof ExchangeRates]}`)
+        rates[symbol as keyof ExchangeRates] = coingeckoRates[symbol as keyof ExchangeRates] || 0
       }
     })
+
+    // Set stable coin prices
+    rates.USDC = 1
+    rates.USDT = 1
+    rates.DAI = 1
+
+    // Set minimum values for specific tokens if both APIs return 0
+    if (rates.MOG === 0) rates.MOG = 0.0000001 // Default MOG value
+    if (rates.TRENCHER === 0) rates.TRENCHER = 0.01 // Default TRENCHER value
 
     // Update cache
     exchangeRatesCache = {
       timestamp: now,
-      rates: {
-        ETH: response.data.ethereum.usd,
-        USDC: response.data['usd-coin'].usd,
-        USDT: response.data.tether.usd,
-        DAI: response.data.dai.usd,
-        WETH: response.data['wrapped-ethereum'].usd,
-        MOG: response.data['mog-coin']?.usd || 0,
-        CULT: response.data['cult-dao']?.usd || 0,
-        SPX6900: response.data.spx6900?.usd || 0,
-        PEPE: response.data.pepe?.usd || 0,
-        SOL: response.data.solana.usd,
-        RAY: response.data.raydium.usd,
-        SRM: response.data.serum.usd,
-        FARTCOIN: response.data.fartcoin?.usd || 0,
-        TRENCHER: response.data.trencher?.usd || 0
-      }
+      rates
     }
 
-    return exchangeRatesCache.rates
+    console.log('Final rates:', rates)
+    return rates
   } catch (error) {
     console.error('Error fetching exchange rates:', error)
-    // Fallback to sensible defaults if API fails
+    // Return cached rates if available, otherwise use fallback values
+    if (exchangeRatesCache.rates.ETH > 0) {
+      console.log('Using cached exchange rates')
+      return exchangeRatesCache.rates
+    }
+    // Fallback to sensible defaults if both APIs fail
     return {
       ETH: 2500,
       USDC: 1,
       USDT: 1,
       DAI: 1,
       WETH: 2500,
-      MOG: 0,
+      MOG: 0.0000001, // Default MOG value
       CULT: 0,
       SPX6900: 0,
       PEPE: 0,
@@ -167,7 +309,7 @@ async function getExchangeRates(): Promise<ExchangeRates> {
       RAY: 1,
       SRM: 1,
       FARTCOIN: 0,
-      TRENCHER: 0
+      TRENCHER: 0.01 // Default TRENCHER value
     }
   }
 }
