@@ -388,8 +388,11 @@ export default function Home() {
   // Function to handle successful tip
   const handleTipSuccess = async (savedTransaction: any) => {
     console.log('Tip successful, refreshing data...')
-    await refreshTransactions();
-    await fetchCreators();
+    await Promise.all([
+      refreshTransactions(),
+      fetchUserTransactions(),
+      fetchCreators()
+    ]);
   }
 
   // Refresh data every 30 seconds
