@@ -1,12 +1,17 @@
-# Allow all crawlers
+# https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
 
-# Sitemap location
-Sitemap: https://tiponx.com/sitemap.xml
-
-# Prevent crawling of API routes
+# Disallow sensitive routes
 Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/private/
 
-# Prevent crawling of auth pages
-Disallow: /api/auth/ 
+# Allow public routes
+Allow: /about
+Allow: /faq
+Allow: /terms
+Allow: /privacy
+
+# Sitemap location
+Sitemap: https://www.tiponx.com/sitemap.xml 
