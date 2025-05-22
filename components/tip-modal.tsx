@@ -39,6 +39,10 @@ interface ErrorResult {
   message: string
 }
 
+interface SuccessState extends TipSuccess {
+  savedTransaction?: any;
+}
+
 interface TipModalProps {
   creator: {
     id: string | number
@@ -53,8 +57,8 @@ interface TipModalProps {
   onClose: () => void
   isOpen: boolean
   userHandle?: string
-  onSuccess?: (savedTransaction: any) => void
-  ethWallet?: string | null // Add connected wallet props
+  onSuccess?: (savedTransaction: any, tipResult: TipResult) => void
+  ethWallet?: string | null
   solWallet?: string | null
 }
 
@@ -70,7 +74,7 @@ export function TipModal({
   const [amount, setAmount] = useState("")
   const [currency, setCurrency] = useState("ETH")
   const [isLoading, setIsLoading] = useState(false)
-  const [result, setResult] = useState<TipResult | null>(null)
+  const [result, setResult] = useState<(TipResult & { savedTransaction?: any }) | null>(null)
   const [availableTokens, setAvailableTokens] = useState<string[]>([])
 
   // Update available tokens based on connected wallets and creator's supported chains
@@ -334,23 +338,19 @@ export function TipModal({
 
           console.log('Transaction saved to database:', savedTransaction)
 
-          // Set success result with both properties
+          // Set success result with saved transaction
           setResult({
             success: true,
             message: `Successfully sent ${amount} ${currency} to ${creator.handle}`,
             signature: (tipResult as TipSuccess).signature,
-            txHash: (tipResult as TipSuccess).txHash
+            txHash: (tipResult as TipSuccess).txHash,
+            savedTransaction // Store the saved transaction in the result
           })
 
-          // Call onSuccess callback if provided
-          if (onSuccess) {
-            onSuccess(savedTransaction)
+          // Call onSuccess with the saved transaction before closing
+          if (onSuccess && result?.success && result.savedTransaction) {
+            onSuccess(result.savedTransaction, tipResult);
           }
-
-          // Close the modal after a short delay
-          setTimeout(() => {
-            onClose()
-          }, 2000)
         } catch (error) {
           console.error('Failed to save transaction:', error)
           setResult({
@@ -431,39 +431,59 @@ export function TipModal({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+    <Dialog 
+      open={isOpen} 
+      onOpenChange={(open) => {
+        // Always allow the modal to close
+        onClose();
+        // Reset state after closing
+        if (!open) {
+          setResult(null);
+          setAmount("");
+        }
+      }}
+    >
+      <DialogContent 
+        className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
+      >
         <DialogHeader>
-          <DialogTitle className="font-pixel text-xl">Send Tip</DialogTitle>
+          <DialogTitle className="font-pixel text-xl">
+            {result?.success ? 'Success!' : 'Send Tip'}
+          </DialogTitle>
           <DialogDescription className="font-mono">
-            Support {creator.name} ({creator.handle})
+            {result?.success ? 
+              `Successfully sent ${amount} ${currency} to ${creator.handle}` :
+              `Support ${creator.name} (${creator.handle})`
+            }
           </DialogDescription>
         </DialogHeader>
 
         <div className="py-4">
-          <div className="flex items-center space-x-3 mb-6">
-            <Avatar className="h-12 w-12 border-4 border-black">
-              <AvatarImage src={creator.avatar || "/placeholder.svg"} alt={creator.name} />
-              <AvatarFallback className="bg-black text-white font-pixel">
-                {creator.name.substring(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h3 className="font-pixel">{creator.name}</h3>
-              <p className="font-mono text-sm">{creator.handle}</p>
+          {!result?.success && (
+            <div className="flex items-center space-x-3 mb-6">
+              <Avatar className="h-12 w-12 border-4 border-black">
+                <AvatarImage src={creator.avatar || "/placeholder.svg"} alt={creator.name} />
+                <AvatarFallback className="bg-black text-white font-pixel">
+                  {creator.name.substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="font-pixel">{creator.name}</h3>
+                <p className="font-mono text-sm">{creator.handle}</p>
+              </div>
             </div>
-          </div>
+          )}
 
-          {result && (
-            <Alert className={`mb-4 border-2 ${getAlertStyles(result)}`}>
-              {getAlertIcon(result)}
-              <AlertTitle className="font-pixel text-sm">
-                {result.success ? 'Success!' : 'Error'}
-              </AlertTitle>
-              <AlertDescription className="font-mono text-xs">
-                {result.message}
-                {result.success && (result.txHash || result.signature) && (
-                  <div className="mt-2">
+          {result?.success ? (
+            <div className="text-center mt-4">
+              <div className="bg-green-50 border-2 border-green-500 rounded-lg p-6 mb-4">
+                <Check className="h-12 w-12 text-green-500 mx-auto mb-2" />
+                <h3 className="font-pixel text-lg mb-2">Tip Sent Successfully!</h3>
+                <p className="font-mono text-sm text-gray-600 mb-4">
+                  Your tip of {amount} {currency} has been sent to {creator.handle}
+                </p>
+                {(result.txHash || result.signature) && (
+                  <div className="mb-4 text-left">
                     <span className="text-gray-600">View on: </span>
                     {SOLANA_TOKENS.includes(currency) ? (
                       <a 
@@ -486,59 +506,30 @@ export function TipModal({
                     )}
                   </div>
                 )}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {creator.isClaimed === false ? (
-            // Unclaimed profile - show invitation message
-            <div>
-              <p className="text-sm mb-4 font-mono">
-                Share this creator's profile claim link with them so they can set up their wallet addresses and receive tips.
-              </p>
-              
-              <Button
-                className="w-full bg-black text-white border-2 border-white hover:bg-gray-800 font-pixel"
-                onClick={handleCopyClaimLink}
-              >
-                <Copy className="h-4 w-4 mr-2" />
-                Copy Claim Link
-              </Button>
-            </div>
-          ) : availableTokens.length === 0 ? (
-            <div>
-              <Alert className="mb-4 border-2 border-yellow-500 bg-yellow-50">
-                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                <AlertTitle className="font-pixel text-sm">No Available Tokens</AlertTitle>
-                <AlertDescription className="font-mono text-xs">
-                  {!ethWallet && !solWallet 
-                    ? "Please connect a wallet to send tips."
-                    : "This creator doesn't accept any tokens from your connected wallets."}
-                </AlertDescription>
-              </Alert>
-              
-              <Button
-                className="w-full bg-black text-white border-2 border-white hover:bg-gray-800 font-pixel"
-                onClick={onClose}
-              >
-                <Check className="h-4 w-4 mr-2" />
-                Got it
-              </Button>
-            </div>
-          ) : result?.success ? (
-            <div className="text-center mt-4">
-              <div className="bg-green-50 border-2 border-green-500 rounded-lg p-6 mb-4">
-                <Check className="h-12 w-12 text-green-500 mx-auto mb-2" />
-                <h3 className="font-pixel text-lg mb-2">Tip Sent Successfully!</h3>
-                <p className="font-mono text-sm text-gray-600 mb-4">
-                  Your tip of {amount} {currency} has been sent to {creator.handle}
-                </p>
-                <Button
-                  className="bg-black text-white border-2 border-white hover:bg-gray-800 font-pixel w-full"
-                  onClick={onClose}
-                >
-                  Close
-                </Button>
+                <div className="space-y-3">
+                  <Button
+                    className="bg-[#1DA1F2] text-white border-2 border-white hover:bg-[#1a8cd8] font-pixel w-full"
+                    onClick={() => {
+                      const tweetText = encodeURIComponent(`I just tipped ${creator.handle} ${amount} ${currency} on @tiponx! 🎉\n\nSupport your favorite creators at tiponx.com 🚀`);
+                      window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, '_blank');
+                    }}
+                  >
+                    Share on X (Twitter)
+                  </Button>
+                  <Button
+                    className="bg-black text-white border-2 border-white hover:bg-gray-800 font-pixel w-full"
+                    onClick={() => {
+                      // Call onSuccess with the saved transaction before closing
+                      if (onSuccess && result?.success && result.savedTransaction) {
+                        onSuccess(result.savedTransaction, result);
+                      }
+                      setResult(null);
+                      onClose();
+                    }}
+                  >
+                    Close
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (
