@@ -72,6 +72,13 @@ interface FormattedTransaction {
   };
 }
 
+interface TipResult {
+  success: boolean;
+  message: string;
+  signature?: string;
+  txHash?: string;
+}
+
 export default function Home() {
   const { data: session } = useSession()
   const [showTipModal, setShowTipModal] = useState(false)
@@ -94,6 +101,7 @@ export default function Home() {
   const [lastRefreshTime, setLastRefreshTime] = useState(Date.now())
   const [userCache, setUserCache] = useState<Record<string, any>>({})
   const [isLoadingTransactions, setIsLoadingTransactions] = useState(true)
+  const [result, setResult] = useState<TipResult | null>(null)
 
   // Fetch creators whenever session changes
   useEffect(() => {
@@ -386,13 +394,24 @@ export default function Home() {
   };
   
   // Function to handle successful tip
-  const handleTipSuccess = async (savedTransaction: any) => {
+  const handleTipSuccess = async (savedTransaction: unknown) => {
     console.log('Tip successful, refreshing data...')
     await Promise.all([
       refreshTransactions(),
       fetchUserTransactions(),
       fetchCreators()
     ]);
+  }
+
+  const handleModalClose = () => {
+    // If we have a successful transaction, don't close
+    if (result?.success) {
+      return;
+    }
+    // Otherwise, close and clean up
+    setShowTipModal(false);
+    setResult(null);
+    refreshTransactions();
   }
 
   // Refresh data every 30 seconds
@@ -1167,13 +1186,15 @@ export default function Home() {
 
       <TipModal
         creator={selectedCreator}
-        onClose={() => {
-          setShowTipModal(false)
-          refreshTransactions() // Refresh when modal closes
-        }}
+        onClose={handleModalClose}
         isOpen={showTipModal}
         userHandle={getCurrentUserHandle()}
-        onSuccess={handleTipSuccess}
+        onSuccess={async (savedTransaction: unknown, tipResult: TipResult) => {
+          await handleTipSuccess(savedTransaction);
+          // Set the result in parent component
+          setResult(tipResult);
+          // Don't close the modal - let user close it manually
+        }}
         ethWallet={ethWallet}
         solWallet={solWallet}
       />
