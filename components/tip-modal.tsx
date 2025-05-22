@@ -510,7 +510,7 @@ export function TipModal({
                   <Button
                     className="bg-[#1DA1F2] text-white border-2 border-white hover:bg-[#1a8cd8] font-pixel w-full"
                     onClick={() => {
-                      const tweetText = encodeURIComponent(`I just tipped ${creator.handle} ${amount} ${currency} on @tiponx! 🎉\n\nSupport your favorite creators at tiponx.com 🚀`);
+                      const tweetText = encodeURIComponent(`I just tipped ${creator.handle} ${amount} ${currency} on @wearetipping! 🎉\n\nSupport your favorite creators at tiponx.com 🚀`);
                       window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, '_blank');
                     }}
                   >
