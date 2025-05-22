@@ -15,6 +15,7 @@ import { useSession } from "next-auth/react"
 import { TipModal } from "@/components/tip-modal"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { Comments } from "@/components/Comments"
 import {
   Tooltip,
   TooltipContent,
@@ -353,15 +354,42 @@ export default function CreatorPage({ params }: { params: Promise<{ handle: stri
             )}
 
             {recentTransactions.length > 0 && (
-              <div>
-                <h3 className="font-pixel text-lg mb-4">Recent Tips</h3>
+              <div className="mt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-pixel text-lg">Recent Tips</h3>
+                  <Button
+                    variant="outline"
+                    className="border-2 border-black font-pixel"
+                    onClick={() => {
+                      const commentsSection = document.getElementById('comments-section');
+                      if (commentsSection) {
+                        commentsSection.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                  >
+                    <Heart className="h-4 w-4 mr-2" />
+                    Leave a Comment
+                  </Button>
+                </div>
                 <div className="space-y-4">
-                  {recentTransactions.map((tx: any) => (
+                  {recentTransactions.slice(0, 5).map((tx) => (
                     <RecentTransaction key={tx.id} transaction={tx} />
                   ))}
+                  {recentTransactions.length > 5 && (
+                    <div className="text-center pt-4">
+                      <p className="text-sm text-gray-500 font-mono">
+                        Showing 5 most recent tips out of {recentTransactions.length} total
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
+
+            {/* Add Comments Section with ID */}
+            <div id="comments-section">
+              <Comments profileHandle={creator.handle} />
+            </div>
           </CardContent>
         </Card>
       </main>
