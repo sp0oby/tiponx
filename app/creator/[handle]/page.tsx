@@ -402,7 +402,6 @@ export default function CreatorPage({ params }: { params: Promise<{ handle: stri
           userHandle={session?.user?.handle || undefined}
           onSuccess={() => {
             fetchCreator(); // Refresh the creator data after successful tip
-            setIsTipModalOpen(false);
           }}
           ethWallet={ethWallet}
           solWallet={solWallet}
