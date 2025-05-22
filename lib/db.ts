@@ -52,6 +52,23 @@ type TransactionInput = Omit<Transaction, '_id'> & {
   updatedAt?: string | Date
 }
 
+export interface Comment {
+  _id?: ObjectId
+  content: string
+  authorHandle: string
+  profileHandle: string // The profile where the comment was posted
+  parentCommentId?: ObjectId // For replies to other comments
+  likes: string[] // Array of user handles who liked the comment
+  createdAt: Date
+  updatedAt: Date
+  isDeleted?: boolean
+}
+
+type CommentInput = Omit<Comment, '_id'> & {
+  createdAt?: string | Date
+  updatedAt?: string | Date
+}
+
 export async function getTransactions(limit = 50): Promise<Transaction[]> {
   const client = await clientPromise
   return client
