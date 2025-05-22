@@ -192,9 +192,8 @@ export function CreatorCard({
     return false
   }
 
-  const handleTipSuccess = () => {
-    // Handle tip success
-    setIsTipModalOpen(false)
+  const handleTipSuccess = async (savedTransaction: any) => {
+    // Don't do anything here - let the modal handle the success state
   }
 
   return (
@@ -317,7 +316,14 @@ export function CreatorCard({
 
       <TipModal
         creator={creator}
-        onClose={() => setIsTipModalOpen(false)}
+        onClose={() => {
+          setIsTipModalOpen(false)
+          // Only refresh data if there was no successful transaction
+          // This prevents the page from refreshing while showing the success message
+          if (!isTipModalOpen) {
+            onTip?.()
+          }
+        }}
         isOpen={isTipModalOpen}
         userHandle={session?.user?.handle || undefined}
         onSuccess={handleTipSuccess}
