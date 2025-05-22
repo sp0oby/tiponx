@@ -20,7 +20,7 @@ async function verifyTweetWithRetry(tweetId, maxRetries = 3) {
   
   while (attempt < maxRetries) {
     try {
-      const apiUrl = `https://api.twitter.com/2/tweets/${tweetId}?expansions=author_id&user.fields=username&tweet.fields=text,author_id`;
+      const apiUrl = `https://api.twitter.com/2/tweets/${tweetId}?expansions=author_id&user.fields=username,description&tweet.fields=text,author_id`;
       console.log(`Attempt ${attempt + 1}/${maxRetries} - Making Twitter API request to:`, apiUrl);
       
       const response = await fetch(apiUrl, {
@@ -162,7 +162,7 @@ export async function POST(req) {
       }
 
       // Update the creator profile with verification
-      const updatedCreator = await verifyTwitter(handle, tweetUrl);
+      const updatedCreator = await verifyTwitter(handle, tweetUrl, tweetData);
       
       return NextResponse.json({
         message: 'Twitter account verified successfully',

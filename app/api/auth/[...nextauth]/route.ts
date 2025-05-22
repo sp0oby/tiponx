@@ -4,6 +4,16 @@ import { getDb } from '@/lib/mongodb';
 
 const DEFAULT_BIO = 'Creator on X - Share your support with tips!';
 
+interface TwitterProfile {
+  data: {
+    id: string;
+    name: string;
+    username: string;
+    profile_image_url?: string;
+    description?: string;
+  }
+}
+
 export const authOptions = {
   providers: [
     TwitterProvider({
@@ -15,6 +25,23 @@ export const authOptions = {
         params: {
           scope: "users.read tweet.read offline.access"
         }
+      },
+      profile(profile) {
+        const twitterProfile = profile as TwitterProfile;
+        return {
+          id: twitterProfile.data.id,
+          name: twitterProfile.data.name,
+          email: null,
+          image: twitterProfile.data.profile_image_url,
+          description: twitterProfile.data.description,
+          handle: '@' + twitterProfile.data.username
+        }
+      },
+      userinfo: {
+        url: 'https://api.twitter.com/2/users/me',
+        params: {
+          'user.fields': 'description,profile_image_url,name,username'
+        }
       }
     }),
   ],
@@ -24,7 +51,8 @@ export const authOptions = {
       if (account.provider === "twitter") {
         try {
           const db = await getDb();
-          const handle = '@' + profile.data.username;
+          const twitterProfile = profile as TwitterProfile;
+          const handle = '@' + twitterProfile.data.username;
           
           // Add handle to user object so it's available in session
           user.handle = handle;
@@ -38,9 +66,9 @@ export const authOptions = {
               { handle },
               {
                 $set: {
-                  name: profile.data.name,
-                  description: profile.data.description || DEFAULT_BIO,
-                  avatar: profile.data.profile_image_url,
+                  name: twitterProfile.data.name,
+                  description: twitterProfile.data.description || existingUser.description || DEFAULT_BIO,
+                  avatar: twitterProfile.data.profile_image_url,
                   updatedAt: new Date()
                 }
               }
@@ -49,9 +77,9 @@ export const authOptions = {
             // Create new user with Twitter data
             await db.collection('users').insertOne({
               handle,
-              name: profile.data.name,
-              description: profile.data.description || DEFAULT_BIO,
-              avatar: profile.data.profile_image_url,
+              name: twitterProfile.data.name,
+              description: twitterProfile.data.description || DEFAULT_BIO,
+              avatar: twitterProfile.data.profile_image_url,
               createdAt: new Date(),
               updatedAt: new Date(),
               isTwitterVerified: true,

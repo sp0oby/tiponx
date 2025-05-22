@@ -55,6 +55,20 @@ export function CreatorCard({
   const { data: session } = useSession()
   const [isTipModalOpen, setIsTipModalOpen] = useState(false)
 
+  const truncateHandle = (handle: string) => {
+    if (handle.length > 15) {
+      return handle.substring(0, 12) + '...';
+    }
+    return handle;
+  };
+
+  const truncateName = (name: string) => {
+    if (name.length > 15) {
+      return `${name.substring(0, 12)}...`;
+    }
+    return name;
+  };
+
   const handleTipClick = () => {
     if (!session) {
       setShowAuthDialog(true)
@@ -196,15 +210,17 @@ export function CreatorCard({
             </Avatar>
             <div>
               <Link href={`/creator/${creator.handle.replace('@', '')}`} className="hover:underline">
-                <h3 className="font-pixel text-sm sm:text-lg leading-tight">{creator.name}</h3>
+                <h3 className="font-pixel text-sm sm:text-lg leading-tight">{truncateName(creator.name)}</h3>
               </Link>
-              <p className="font-mono text-[10px] sm:text-sm">{creator.handle}</p>
+              <p className="font-mono text-[10px] sm:text-sm">{truncateHandle(creator.handle)}</p>
             </div>
           </div>
         </CardHeader>
 
         <CardContent className="p-2 sm:p-4">
-          <p className="text-[11px] sm:text-sm mb-2 sm:mb-4">{creator.description}</p>
+          <p className="text-[11px] sm:text-sm mb-2 sm:mb-4 line-clamp-2 min-h-[2.5rem]">
+            {creator.description}
+          </p>
           
           {creator.isClaimed === false ? (
             <Badge className="border-2 border-black font-mono bg-orange-100 text-orange-800 mb-2 text-[10px] sm:text-sm">
@@ -227,19 +243,19 @@ export function CreatorCard({
           {!hasCompatibleWallet() && Object.keys(creator.wallets).length > 0 && (
             <div className="text-[10px] sm:text-xs text-amber-600 flex items-center mt-2">
               <AlertCircle className="h-3 w-3 mr-1" />
-              <span>Connect a wallet to tip with these tokens</span>
+              <span>Connect {Object.keys(creator.wallets).includes('ETH') ? 'Ethereum' : 'Solana'} wallet in my profile to tip</span>
             </div>
           )}
         </CardContent>
 
-        <CardFooter className="border-t-4 border-black p-2 sm:p-4 bg-gray-100 flex flex-col sm:flex-row justify-between gap-2 sm:gap-4">
+        <CardFooter className="border-t-4 border-black p-2 sm:p-4 bg-gray-100 flex flex-col sm:flex-row justify-between gap-2 sm:gap-4 min-h-[80px]">
           <div className="flex gap-1 sm:gap-2 w-full sm:w-auto">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex-1 sm:flex-none">
                     <Button 
-                      className={`w-full sm:w-auto border-2 font-pixel text-[11px] sm:text-base ${
+                      className={`w-full sm:w-auto border-2 font-pixel text-[11px] sm:text-base h-full min-h-[40px] ${
                         (hasCompatibleWallet() || creator.isClaimed === false)
                           ? 'bg-black text-white border-white hover:bg-gray-800' 
                           : 'bg-gray-300 text-gray-700 border-gray-500 cursor-not-allowed'
@@ -251,7 +267,7 @@ export function CreatorCard({
                         ? 'Invite to Claim' 
                         : hasCompatibleWallet() 
                           ? 'Tip Now' 
-                          : 'Wallet Needed'}
+                          : 'Connect'}
                     </Button>
                   </div>
                 </TooltipTrigger>

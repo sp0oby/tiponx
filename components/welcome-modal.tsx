@@ -16,8 +16,12 @@ export function WelcomeModal() {
     }
   }, [])
 
+  const handleClose = () => {
+    setIsOpen(false)
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-2xl p-2 sm:p-6">
         <div className="relative overflow-hidden">
           {/* Background pattern */}
@@ -99,11 +103,11 @@ export function WelcomeModal() {
             className="text-center"
           >
             <Button
-              onClick={() => setIsOpen(false)}
+              onClick={handleClose}
               className="bg-black text-white border-2 border-white hover:bg-gray-800 font-pixel px-6 sm:px-10 py-4 sm:py-6 text-base sm:text-lg"
             >
               <Sparkles className="h-4 w-4 sm:h-6 sm:w-6 mr-2" />
-              Let's Go!
+              Got It!
             </Button>
           </motion.div>
         </div>

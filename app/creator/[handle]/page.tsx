@@ -53,6 +53,22 @@ export default function CreatorPage({ params }: { params: Promise<{ handle: stri
     
     if (savedEthWallet) setEthWallet(savedEthWallet)
     if (savedSolWallet) setSolWallet(savedSolWallet)
+
+    // Add wallet disconnection event listeners
+    const handleWalletDisconnected = (event: CustomEvent) => {
+      if (event.detail.chain === 'ETH') {
+        setEthWallet(null);
+      } else if (event.detail.chain === 'SOL') {
+        setSolWallet(null);
+      }
+    };
+
+    window.addEventListener('walletDisconnected', handleWalletDisconnected as EventListener);
+
+    // Cleanup event listener
+    return () => {
+      window.removeEventListener('walletDisconnected', handleWalletDisconnected as EventListener);
+    };
   }, [])
 
   async function fetchCreator() {
@@ -128,7 +144,6 @@ export default function CreatorPage({ params }: { params: Promise<{ handle: stri
               txHash: tx.txHash,
               status: tx.status,
               confirmations: tx.confirmations,
-              usdValue: tx.usdValue,
               gasUsed: tx.gasUsed,
               gasFee: tx.gasFee,
               pendingClaim: tx.pendingClaim || false,

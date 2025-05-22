@@ -33,7 +33,7 @@ export async function GET(request: Request) {
       if (!user.avatar && user.handle?.startsWith('@')) {
         try {
           const twitterHandle = user.handle.substring(1); // Remove @ symbol
-          const twitterResponse = await fetch(`https://api.twitter.com/2/users/by/username/${twitterHandle}?user.fields=profile_image_url`, {
+          const twitterResponse = await fetch(`https://api.twitter.com/2/users/by/username/${twitterHandle}?user.fields=profile_image_url,description`, {
             headers: {
               'Authorization': `Bearer ${process.env.TWITTER_BEARER_TOKEN}`
             }
@@ -41,14 +41,25 @@ export async function GET(request: Request) {
           
           if (twitterResponse.ok) {
             const twitterData = await twitterResponse.json();
-            if (twitterData.data?.profile_image_url) {
-              // Update user with Twitter avatar
-              const avatar = twitterData.data.profile_image_url.replace('_normal', ''); // Get full-size image
-              await db.collection('users').updateOne(
-                { handle },
-                { $set: { avatar } }
-              );
-              user.avatar = avatar;
+            if (twitterData.data) {
+              // Update user with Twitter data
+              const updates: Partial<User> = {};
+              
+              if (twitterData.data.profile_image_url) {
+                updates.avatar = twitterData.data.profile_image_url.replace('_normal', ''); // Get full-size image
+              }
+              
+              if (twitterData.data.description) {
+                updates.description = twitterData.data.description;
+              }
+              
+              if (Object.keys(updates).length > 0) {
+                await db.collection('users').updateOne(
+                  { handle },
+                  { $set: updates }
+                );
+                Object.assign(user, updates);
+              }
             }
           }
         } catch (error) {
@@ -76,7 +87,7 @@ export async function GET(request: Request) {
       if (!creator.avatar && creator.handle?.startsWith('@')) {
         try {
           const twitterHandle = creator.handle.substring(1);
-          const twitterResponse = await fetch(`https://api.twitter.com/2/users/by/username/${twitterHandle}?user.fields=profile_image_url`, {
+          const twitterResponse = await fetch(`https://api.twitter.com/2/users/by/username/${twitterHandle}?user.fields=profile_image_url,description`, {
             headers: {
               'Authorization': `Bearer ${process.env.TWITTER_BEARER_TOKEN}`
             }
@@ -84,13 +95,24 @@ export async function GET(request: Request) {
           
           if (twitterResponse.ok) {
             const twitterData = await twitterResponse.json();
-            if (twitterData.data?.profile_image_url) {
-              const avatar = twitterData.data.profile_image_url.replace('_normal', '');
-              await db.collection('users').updateOne(
-                { handle: creator.handle },
-                { $set: { avatar } }
-              );
-              return { ...creator, avatar };
+            if (twitterData.data) {
+              const updates: Partial<User> = {};
+              
+              if (twitterData.data.profile_image_url) {
+                updates.avatar = twitterData.data.profile_image_url.replace('_normal', '');
+              }
+              
+              if (twitterData.data.description) {
+                updates.description = twitterData.data.description;
+              }
+              
+              if (Object.keys(updates).length > 0) {
+                await db.collection('users').updateOne(
+                  { handle: creator.handle },
+                  { $set: updates }
+                );
+                return { ...creator, ...updates };
+              }
             }
           }
         } catch (error) {

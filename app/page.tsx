@@ -21,6 +21,57 @@ import { formatRelativeTime } from "@/lib/utils"
 import { CreatorRankings } from "@/components/creator-rankings"
 import { WelcomeModal } from "@/components/welcome-modal"
 
+interface Transaction {
+  _id?: string;
+  id?: string;
+  amount: number;
+  currency: string;
+  usdValue: number;
+  senderHandle: string;
+  receiverHandle: string;
+  timestamp?: string;
+  createdAt?: string;
+  chain: string;
+  txHash: string;
+  status: string;
+  confirmations: number;
+  gasUsed?: number;
+  gasFee?: number;
+  pendingClaim?: boolean;
+  sender?: {
+    avatar?: string;
+  };
+  recipient?: {
+    avatar?: string;
+  };
+  senderAvatar?: string;
+  recipientAvatar?: string;
+}
+
+interface FormattedTransaction {
+  id: string | number;
+  senderHandle: string;
+  receiverHandle: string;
+  senderAvatar?: string;
+  recipientAvatar?: string;
+  amount: string;
+  currency: string;
+  time: string;
+  chain: string;
+  txHash: string;
+  status: "pending" | "confirmed" | "failed" | undefined;
+  confirmations: number;
+  gasUsed?: string;
+  gasFee?: string;
+  pendingClaim: boolean;
+  sender?: {
+    avatar?: string;
+  };
+  recipient?: {
+    avatar?: string;
+  };
+}
+
 export default function Home() {
   const { data: session } = useSession()
   const [showTipModal, setShowTipModal] = useState(false)
@@ -32,13 +83,13 @@ export default function Home() {
   const [solWallet, setSolWallet] = useState<string | null>(null)
   const [isConnectingEth, setIsConnectingEth] = useState(false)
   const [isConnectingSol, setIsConnectingSol] = useState(false)
-  const [userTipsSent, setUserTipsSent] = useState<any[]>([])
-  const [userTipsReceived, setUserTipsReceived] = useState<any[]>([])
-  const [totalTipsSentUsd, setTotalTipsSentUsd] = useState(0)
-  const [totalTipsReceivedUsd, setTotalTipsReceivedUsd] = useState(0)
+  const [userTipsSent, setUserTipsSent] = useState<Transaction[]>([])
+  const [userTipsReceived, setUserTipsReceived] = useState<Transaction[]>([])
+  const [totalTipsSent, setTotalTipsSent] = useState(0)
+  const [totalTipsReceived, setTotalTipsReceived] = useState(0)
   const [creators, setCreators] = useState<any[]>([])
   const [isLoadingCreators, setIsLoadingCreators] = useState(true)
-  const [recentTransactions, setRecentTransactions] = useState<any[]>([])
+  const [recentTransactions, setRecentTransactions] = useState<FormattedTransaction[]>([])
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastRefreshTime, setLastRefreshTime] = useState(Date.now())
   const [userCache, setUserCache] = useState<Record<string, any>>({})
@@ -53,10 +104,40 @@ export default function Home() {
   useEffect(() => {
     const savedEthWallet = localStorage.getItem('ethWallet')
     const savedSolWallet = localStorage.getItem('solWallet')
+    const savedTwitterHandle = localStorage.getItem('twitterHandle')
     
-    if (savedEthWallet) setEthWallet(savedEthWallet)
-    if (savedSolWallet) setSolWallet(savedSolWallet)
-  }, [])
+    // Clear wallets if Twitter handle has changed
+    if (session?.user?.handle && savedTwitterHandle && savedTwitterHandle !== session.user.handle) {
+      localStorage.removeItem('ethWallet')
+      localStorage.removeItem('solWallet')
+      setEthWallet(null)
+      setSolWallet(null)
+    } else {
+      if (savedEthWallet) setEthWallet(savedEthWallet)
+      if (savedSolWallet) setSolWallet(savedSolWallet)
+    }
+    
+    // Update saved Twitter handle
+    if (session?.user?.handle) {
+      localStorage.setItem('twitterHandle', session.user.handle)
+    }
+
+    // Add wallet disconnection event listeners
+    const handleWalletDisconnected = (event: CustomEvent) => {
+      if (event.detail.chain === 'ETH') {
+        setEthWallet(null);
+      } else if (event.detail.chain === 'SOL') {
+        setSolWallet(null);
+      }
+    };
+
+    window.addEventListener('walletDisconnected', handleWalletDisconnected as EventListener);
+
+    // Cleanup event listener
+    return () => {
+      window.removeEventListener('walletDisconnected', handleWalletDisconnected as EventListener);
+    };
+  }, [session?.user?.handle])
 
   // Save wallet connections to localStorage whenever they change
   useEffect(() => {
@@ -75,9 +156,20 @@ export default function Home() {
     }
   }, [solWallet])
 
+  // Clear wallets when user signs out
+  useEffect(() => {
+    if (!session) {
+      setEthWallet(null)
+      setSolWallet(null)
+      localStorage.removeItem('ethWallet')
+      localStorage.removeItem('solWallet')
+      localStorage.removeItem('twitterHandle')
+    }
+  }, [session])
+
   // Function to calculate total tips sent in USD
   const calculateTotalTipsSent = () => {
-    return totalTipsSentUsd.toFixed(2);
+    return totalTipsSent.toFixed(2);
   }
 
   // Fetch user's transactions
@@ -110,27 +202,15 @@ export default function Home() {
         setUserTipsSent(validSentTransactions);
         setUserTipsReceived(validReceivedTransactions);
         
-        // Calculate total USD values - count all transactions
-        const totalSent = validSentTransactions
-          .reduce((sum: number, tx: any) => {
-            const value = tx.usdValue || 0;
-            console.log(`Adding transaction to total: ${tx.amount} ${tx.currency} = $${value}`);
-            return sum + value;
-          }, 0);
+        // Calculate total tips - count number of transactions
+        const totalSent = validSentTransactions.length;
+        const totalReceived = validReceivedTransactions.length;
           
         console.log('Final total sent:', totalSent);
-        
-        const totalReceived = validReceivedTransactions
-          .reduce((sum: number, tx: any) => {
-            const value = tx.usdValue || 0;
-            console.log(`Adding received transaction to total: ${tx.amount} ${tx.currency} = $${value}`);
-            return sum + value;
-          }, 0);
-          
         console.log('Final total received:', totalReceived);
           
-        setTotalTipsSentUsd(totalSent);
-        setTotalTipsReceivedUsd(totalReceived);
+        setTotalTipsSent(totalSent);
+        setTotalTipsReceived(totalReceived);
       } else {
         console.error('Error fetching user transactions:', 
           !sentResponse.ok ? await sentResponse.text() : await receivedResponse.text()
@@ -199,28 +279,34 @@ export default function Home() {
           console.log('Fetched recent transactions:', transactions);
           
           // Format transactions to match the RecentTransaction component's expected format
-          const formattedTransactions = transactions.map((tx: any) => ({
-            id: tx._id || tx.id,
+          const formattedTransactions = (transactions as Transaction[]).map((tx: Transaction): FormattedTransaction => ({
+            id: tx._id || tx.id || '',
             senderHandle: tx.senderHandle,
             receiverHandle: tx.receiverHandle,
             senderAvatar: tx.sender?.avatar || tx.senderAvatar,
             recipientAvatar: tx.recipient?.avatar || tx.recipientAvatar,
-            amount: tx.amount,
+            amount: tx.amount.toString(),
             currency: tx.currency,
-            time: formatRelativeTime(tx.timestamp || tx.createdAt),
+            time: formatRelativeTime(tx.timestamp || tx.createdAt || new Date().toISOString()),
             chain: tx.chain,
             txHash: tx.txHash,
-            status: tx.status,
+            status: tx.status as "pending" | "confirmed" | "failed" | undefined,
             confirmations: tx.confirmations,
-            usdValue: tx.usdValue,
-            gasUsed: tx.gasUsed,
-            gasFee: tx.gasFee,
+            gasUsed: tx.gasUsed?.toString(),
+            gasFee: tx.gasFee?.toString(),
             pendingClaim: tx.pendingClaim || false,
             sender: tx.sender,
             recipient: tx.recipient
           }));
           
-          setRecentTransactions(formattedTransactions);
+          // Update transactions state
+          setRecentTransactions((prevTransactions: FormattedTransaction[]) => {
+            // Filter out any transactions that are already in the list
+            const newTransactions = formattedTransactions.filter((newTx: FormattedTransaction) => 
+              !prevTransactions.some((existingTx: FormattedTransaction) => existingTx.txHash === newTx.txHash)
+            );
+            return [...prevTransactions, ...newTransactions];
+          });
         }
       } catch (error) {
         console.error('Error fetching initial transactions:', error);
@@ -250,22 +336,21 @@ export default function Home() {
         console.log('Fetched recent transactions:', transactions)
         
         // Format transactions to match the RecentTransaction component's expected format
-        const formattedTransactions = transactions.map((tx: any) => ({
-          id: tx._id || tx.id,
+        const formattedTransactions = (transactions as Transaction[]).map((tx: Transaction): FormattedTransaction => ({
+          id: tx._id || tx.id || '',
           senderHandle: tx.senderHandle,
           receiverHandle: tx.receiverHandle,
           senderAvatar: tx.sender?.avatar || tx.senderAvatar,
           recipientAvatar: tx.recipient?.avatar || tx.recipientAvatar,
-          amount: tx.amount,
+          amount: tx.amount.toString(),
           currency: tx.currency,
-          time: formatRelativeTime(tx.timestamp || tx.createdAt),
+          time: formatRelativeTime(tx.timestamp || tx.createdAt || new Date().toISOString()),
           chain: tx.chain,
           txHash: tx.txHash,
-          status: tx.status,
+          status: tx.status as "pending" | "confirmed" | "failed" | undefined,
           confirmations: tx.confirmations,
-          usdValue: tx.usdValue,
-          gasUsed: tx.gasUsed,
-          gasFee: tx.gasFee,
+          gasUsed: tx.gasUsed?.toString(),
+          gasFee: tx.gasFee?.toString(),
           pendingClaim: tx.pendingClaim || false,
           sender: tx.sender,
           recipient: tx.recipient
@@ -687,25 +772,25 @@ export default function Home() {
             </div>
 
             {!ethWallet && !solWallet ? (
-              <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mb-6 p-6">
+              <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mb-6 p-4 sm:p-6">
                 <div className="text-center">
-                  <h2 className="font-pixel text-xl mb-3">Connect Your Wallet to Tip Creators</h2>
-                  <p className="font-mono text-sm mb-4">You need to connect at least one wallet to send tips to your favorite creators.</p>
-                  <div className="flex justify-center gap-4">
+                  <h2 className="font-pixel text-lg sm:text-xl mb-2 sm:mb-3">Connect Your Wallet to Tip Creators</h2>
+                  <p className="font-mono text-xs sm:text-sm mb-3 sm:mb-4">You need to connect at least one wallet to send tips to your favorite creators.</p>
+                  <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4">
                     <Button 
-                      className="bg-blue-500 text-white border-2 border-black hover:bg-blue-600 font-pixel"
+                      className="bg-blue-500 text-white border-2 border-black hover:bg-blue-600 font-pixel text-xs sm:text-base py-2 sm:py-4"
                       onClick={handleConnectEthereum}
                       disabled={isConnectingEth}
                     >
-                      <Wallet className="mr-2 h-4 w-4" />
+                      <Wallet className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                       {isConnectingEth ? 'Connecting...' : 'Connect Ethereum'}
                     </Button>
                     <Button 
-                      className="bg-purple-500 text-white border-2 border-black hover:bg-purple-600 font-pixel"
+                      className="bg-purple-500 text-white border-2 border-black hover:bg-purple-600 font-pixel text-xs sm:text-base py-2 sm:py-4"
                       onClick={handleConnectSolana}
                       disabled={isConnectingSol}
                     >
-                      <Wallet className="mr-2 h-4 w-4" />
+                      <Wallet className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                       {isConnectingSol ? 'Connecting...' : 'Connect Solana'}
                     </Button>
                   </div>
@@ -845,11 +930,11 @@ export default function Home() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <h4 className="font-pixel mb-2">Total Tips Sent</h4>
-                          <p className="font-mono text-3xl">${totalTipsSentUsd.toFixed(2)}</p>
+                          <p className="font-mono text-3xl">{totalTipsSent}</p>
                         </div>
                         <div>
                           <h4 className="font-pixel mb-2">Total Tips Received</h4>
-                          <p className="font-mono text-3xl">${totalTipsReceivedUsd.toFixed(2)}</p>
+                          <p className="font-mono text-3xl">{totalTipsReceived}</p>
                         </div>
                       </div>
                     </div>

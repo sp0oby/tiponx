@@ -18,7 +18,7 @@ interface Creator {
   name: string
   avatar?: string
   description: string
-  totalTipsUsd: number
+  tipCount: number
   upvoteCount: number
   score: number
   isClaimed: boolean
@@ -28,6 +28,20 @@ export function CreatorRankings() {
   const [creators, setCreators] = useState<Creator[]>([])
   const [timeframe, setTimeframe] = useState('all')
   const [isLoading, setIsLoading] = useState(true)
+
+  const truncateHandle = (handle: string) => {
+    if (handle.length > 15) {
+      return handle.substring(0, 12) + '...';
+    }
+    return handle;
+  };
+
+  const truncateName = (name: string) => {
+    if (name.length > 15) {
+      return `${name.substring(0, 12)}...`;
+    }
+    return name;
+  };
 
   useEffect(() => {
     const fetchRankings = async () => {
@@ -108,14 +122,14 @@ export function CreatorRankings() {
                     <Link href={`/creator/${creator.handle.replace('@', '')}`} className="hover:underline">
                       <h3 className="font-pixel text-sm sm:text-lg leading-tight">{creator.name}</h3>
                     </Link>
-                    <p className="font-mono text-[10px] sm:text-sm text-gray-600">{creator.handle}</p>
+                    <p className="font-mono text-[10px] sm:text-sm text-gray-600">{truncateHandle(creator.handle)}</p>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-0 w-full sm:w-auto justify-between sm:justify-end">
                   <div className="text-left sm:text-right">
                     <p className="font-mono text-[10px] sm:text-sm text-gray-600">Total Tips</p>
-                    <p className="font-pixel text-[11px] sm:text-base">${creator.totalTipsUsd.toFixed(2)}</p>
+                    <p className="font-pixel text-[11px] sm:text-base">{creator.tipCount || 0}</p>
                   </div>
                   <div className="text-left sm:text-right">
                     <p className="font-mono text-[10px] sm:text-sm text-gray-600">Upvotes</p>

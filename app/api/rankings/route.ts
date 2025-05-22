@@ -30,7 +30,6 @@ export async function GET(request: Request) {
           pipeline: [
             {
               $match: {
-                status: 'completed',
                 timestamp: { $gte: startDate }
               }
             }
@@ -55,8 +54,8 @@ export async function GET(request: Request) {
       },
       {
         $addFields: {
-          totalTipsUsd: {
-            $sum: '$receivedTransactions.usdValue'
+          tipCount: {
+            $size: '$receivedTransactions'
           },
           upvoteCount: {
             $size: '$upvotes'
@@ -64,7 +63,7 @@ export async function GET(request: Request) {
           // Calculate weighted score (you can adjust the weights)
           score: {
             $add: [
-              { $multiply: [{ $sum: '$receivedTransactions.usdValue' }, 1] }, // Weight for tips
+              { $multiply: [{ $size: '$receivedTransactions' }, 10] }, // Weight for number of tips
               { $multiply: [{ $size: '$upvotes' }, 10] } // Weight for upvotes
             ]
           }
@@ -77,7 +76,7 @@ export async function GET(request: Request) {
           name: 1,
           avatar: 1,
           description: 1,
-          totalTipsUsd: 1,
+          tipCount: 1,
           upvoteCount: 1,
           score: 1,
           isClaimed: 1

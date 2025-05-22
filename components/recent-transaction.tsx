@@ -18,7 +18,6 @@ interface RecentTransactionProps {
     pendingClaim?: boolean
     status?: 'pending' | 'confirmed' | 'failed'
     confirmations?: number
-    usdValue?: number
     gasUsed?: string
     gasFee?: string
   }
@@ -208,31 +207,25 @@ export function RecentTransaction({ transaction }: RecentTransactionProps) {
           <Badge className={`${getCurrencyColor(transaction.currency)} text-black font-mono text-xs sm:text-sm mb-1`}>
             {transaction.amount} {transaction.currency}
           </Badge>
-          {transaction.usdValue && (
-            <span className="text-[10px] sm:text-xs text-gray-500 font-mono">
-              ≈ ${transaction.usdValue.toFixed(2)}
-            </span>
-          )}
         </div>
       </div>
-      <div className="flex justify-between items-center text-[10px] sm:text-xs">
-        <div className="text-gray-500 font-mono flex items-center">
-          <span className="mr-2">{transaction.time}</span>
-          {transaction.gasUsed && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <span className="text-gray-400 hidden sm:inline">Gas: {transaction.gasFee}</span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Gas used: {transaction.gasUsed}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </div>
-        {transaction.txHash && getExplorerLink(transaction.chain, transaction.txHash)}
+      
+      <div className="text-gray-500 font-mono flex items-center">
+        <span className="mr-2">{transaction.time}</span>
+        {transaction.gasUsed && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <span className="text-gray-400 hidden sm:inline">Gas: {transaction.gasFee}</span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Gas used: {transaction.gasUsed}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
+      {transaction.txHash && getExplorerLink(transaction.chain, transaction.txHash)}
     </div>
   )
 }
