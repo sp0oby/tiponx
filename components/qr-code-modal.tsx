@@ -42,19 +42,84 @@ export function QRCodeModal({ isOpen, onClose, creator }: QRCodeModalProps) {
   }, [creator.avatar])
 
   const handleDownload = () => {
-    const canvas = qrRef.current?.querySelector('svg')
-    if (canvas) {
-      const svgData = new XMLSerializer().serializeToString(canvas)
-      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
-      const url = URL.createObjectURL(svgBlob)
+    const qrContainer = qrRef.current
+    if (qrContainer) {
+      const canvasElement = document.createElement('canvas')
+      const ctx = canvasElement.getContext('2d')
       
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `${creator.handle}-qr-code.svg`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
+      // Set fixed size for the QR code (matching the SVG size)
+      const size = 200
+      const padding = 16 // equivalent to p-4 in Tailwind
+      canvasElement.width = size + (padding * 2)
+      canvasElement.height = size + (padding * 2)
+      
+      if (ctx) {
+        // Draw white background
+        ctx.fillStyle = 'white'
+        ctx.fillRect(0, 0, canvasElement.width, canvasElement.height)
+      }
+
+      const svgElement = qrContainer.querySelector('svg')
+      
+      if (svgElement && ctx) {
+        const svgData = new XMLSerializer().serializeToString(svgElement)
+        const img = new window.Image()
+        
+        img.onload = () => {
+          // Draw QR code with padding
+          ctx.drawImage(img, padding, padding, size, size)
+          
+          // If avatar exists, draw it on top
+          if (avatarUrl) {
+            const avatarImg = new window.Image()
+            avatarImg.onload = () => {
+              const avatarSize = 60
+              const avatarPadding = 6 // for white border
+              
+              // Calculate center position (including the padding offset)
+              const centerX = (canvasElement.width - avatarSize) / 2
+              const centerY = (canvasElement.height - avatarSize) / 2
+              
+              // Draw white circle background (slightly larger for border effect)
+              ctx.save()
+              ctx.beginPath()
+              ctx.arc(centerX + (avatarSize/2), centerY + (avatarSize/2), 
+                     (avatarSize/2) + avatarPadding, 0, Math.PI * 2)
+              ctx.fillStyle = 'white'
+              ctx.fill()
+              
+              // Draw avatar
+              ctx.beginPath()
+              ctx.arc(centerX + (avatarSize/2), centerY + (avatarSize/2), 
+                     avatarSize/2, 0, Math.PI * 2)
+              ctx.clip()
+              ctx.drawImage(avatarImg, centerX, centerY, avatarSize, avatarSize)
+              ctx.restore()
+              
+              // Convert to PNG and trigger download
+              const pngUrl = canvasElement.toDataURL('image/png')
+              const link = document.createElement('a')
+              link.href = pngUrl
+              link.download = `${creator.handle}-qr-code.png`
+              document.body.appendChild(link)
+              link.click()
+              document.body.removeChild(link)
+            }
+            avatarImg.src = avatarUrl
+          } else {
+            // If no avatar, download immediately
+            const pngUrl = canvasElement.toDataURL('image/png')
+            const link = document.createElement('a')
+            link.href = pngUrl
+            link.download = `${creator.handle}-qr-code.png`
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+          }
+        }
+        
+        img.src = 'data:image/svg+xml;base64,' + btoa(svgData)
+      }
     }
   }
 
